@@ -11,3 +11,14 @@ docs/INDIRMELER.md
 .DS_Store
 Thumbs.db
 *.log
+
+# Bağımlılıklar ve derleme çıktıları
+node_modules/
+dist/
+coverage/
+
+# Yerel SQLite veritabanı dosyaları
+*.db
+*.db-journal
+*.db-shm
+*.db-wal

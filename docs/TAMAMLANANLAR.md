@@ -7,4 +7,4 @@
 
 | Tarih | Görev | Tamamlanan Yapı | Doğrulama |
 | :--- | :--- | :--- | :--- |
-| - | - | Henüz tamamlanan bir uygulama yapısı yok. | - |
+| 2026-11-25 | `AUTH-4` | `backend/` iskeleti (Express 5 + TS + Zod + JWT + `bcryptjs`), Prisma/SQLite `User` şeması (`init_user`) ve `POST /api/auth/register` + `GET /api/health`. | `tsc` + canlı HTTP testi (200/400/201/409/404) geçti. |

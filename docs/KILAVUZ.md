@@ -32,7 +32,7 @@ Fitness Tracker/
 
 ## 4. Yol Haritası
 **Faz 0 — Kurulum**
-- [ ] Jira (`AUTH`, 5 sütun, `AUTH-1`..`AUTH-7`) + Public GitHub repo + `GitHub for Jira`
+- [x] Jira (`AUTH`, 5 sütun, `AUTH-1`..`AUTH-7`) + Public GitHub repo + `GitHub for Jira`
 
 **Faz 1 — Authentication (`In Progress → Branch → Smart Commit → PR/Code Review → Testing → Done`)**
 - [ ] `AUTH-4` Backend iskelet, Prisma/SQLite ve Register API
@@ -47,4 +47,5 @@ Fitness Tracker/
 - [ ] `AUTH-8` Günlük Kilo Takibi · `AUTH-9` Manuel Kalori · `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Testler
 
 ## 5. Çalıştırma
-*(İskelet kurulduğunda geliştirme ve test komutları eklenecek.)*
+- **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`
+- **Backend geliştirme & derleme:** `npm --prefix backend run dev` · `npm --prefix backend run typecheck` · `npm --prefix backend run build`
