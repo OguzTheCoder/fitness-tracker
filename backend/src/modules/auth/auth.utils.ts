@@ -1,4 +1,5 @@
 import type { User } from '@prisma/client';
+import crypto from 'node:crypto';
 import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import { env } from '../../config/env.js';
 import { AppError } from '../../middlewares/errorHandler.js';
@@ -43,4 +44,13 @@ export function verifyAccessToken(token: string): AuthUser {
     if (err instanceof AppError) throw err;
     throw new AppError(401, 'Geçersiz veya süresi dolmuş oturum.');
   }
+}
+
+export function generateResetToken(): { rawToken: string; tokenHash: string } {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  return { rawToken, tokenHash: hashResetToken(rawToken) };
+}
+
+export function hashResetToken(rawToken: string): string {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
 }
