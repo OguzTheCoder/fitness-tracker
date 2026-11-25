@@ -12,3 +12,4 @@
 | 2026-11-25 | `AUTH-6` | `PasswordResetToken` (15 dk, tek kullanımlık SHA-256 hash), `MailProvider` soyutlaması, `POST /api/auth/forgot-password` ve `POST /api/auth/reset-password`. | `tsc` + 8 canlı HTTP senaryosu (unknown/valid/invalid/reuse/login) geçti. |
 | 2026-11-25 | `AUTH-1` | `frontend/` iskeleti (React 19 + Vite 6 + TS + Tailwind CSS), `api`/`authService`, `AuthLayout`/`FormField` ve Türkçe Kayıt ekranı (`RegisterPage`). | `tsc -b && vite build` 0 hatayla geçti. |
 | 2026-11-25 | `AUTH-2` | `AuthContext` (JWT + `/api/auth/me` doğrulama + çıkış), `ProtectedRoute`, `LoginPage` ve korumalı `DashboardPage`. | `tsc -b && vite build` 0 hatayla geçti. |
+| 2026-11-25 | `AUTH-3` | `ForgotPasswordPage` ve `ResetPasswordPage` (`?token=` desteği + doğrulama) ve `/forgot-password`, `/reset-password` rotaları. | `tsc -b && vite build` 0 hatayla geçti. |
