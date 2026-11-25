@@ -3,14 +3,14 @@
 > **Kurallar:** Projenin giriş noktasıdır; **her adımdan sonra güncellenir**. Yalnızca güncel durum ve sıradaki 1–3 adım tutulur; eski işler burada biriktirilmez (biten yapılar [TAMAMLANANLAR.md](./TAMAMLANANLAR.md) içine gider).
 
 ## Neredeyiz?
-- **Faz:** Faz 1 — Authentication (`AUTH-4` kodlama ve doğrulama tamamlandı)
-- **Aktif Branch:** `AUTH-4-backend-iskelet-register`
-- **Son Adım:** `backend/` iskeleti (Express 5 + TS + Zod + JWT + `bcryptjs`), Prisma/SQLite `User` şeması (`init_user` migration) ve `POST /api/auth/register` + `GET /api/health` uç noktaları kuruldu; 5 HTTP senaryosu (200/400/201/409/404) ve `tsc` derlemesi doğrulandı.
+- **Faz:** Faz 1 — Authentication (`AUTH-4` merge edildi; `AUTH-5` kodlama ve doğrulama tamamlandı)
+- **Aktif Branch:** `AUTH-5-backend-login-me`
+- **Son Adım:** `POST /api/auth/login`, `GET /api/auth/me` ve Bearer JWT doğrulama middleware'i (`authenticate`) eklendi; `tsc` ve 7 canlı HTTP senaryosu doğrulandı.
 
 ## Sırada Ne Var?
-1. `AUTH-4` değişikliklerini Smart Commit (`AUTH-4 ...`) ile commit edip `origin`'e push etmek ve PR açmak (`Code Review` → `Testing` → `Done`).
-2. `main` dalına dönüp `AUTH-5-backend-login-me` branch'ini açmak (Jira `AUTH-5` → `In Progress`).
-3. `POST /api/auth/login` ve `GET /api/auth/me` (JWT doğrulama middleware'i dahil) uç noktalarını yazıp doğrulamak.
+1. `AUTH-5` değişikliklerini Smart Commit (`AUTH-5 ...`) ile commit edip `origin`'e push etmek, PR açıp merge etmek.
+2. `AUTH-6-backend-password-reset` branch'ini açıp `PasswordResetToken` modeli, `MailProvider` soyutlaması, `POST /api/auth/forgot-password` ve `POST /api/auth/reset-password` uç noktalarını yazmak.
+3. Ardından Frontend (`AUTH-1`, `AUTH-2`, `AUTH-3`) ve Entegrasyon Testleri (`AUTH-7`) ile Faz 1'i tamamlamak.
 
 ## Ayrıntı Nerede?
 - Plan ve mimari şablon: [KILAVUZ.md](./KILAVUZ.md)
