@@ -40,7 +40,7 @@ Fitness Tracker/
 - [x] `AUTH-6` Backend Şifre Sıfırlama API + `MailProvider`
 - [x] `AUTH-1` Frontend iskelet ve Kayıt ekranı
 - [x] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
-- [ ] `AUTH-3` Frontend Şifre Sıfırlama ekranları
+- [x] `AUTH-3` Frontend Şifre Sıfırlama ekranları
 - [ ] `AUTH-7` Backend + Frontend entegrasyon testleri
 
 **Faz 2 — Fitness Tracker MVP (Faz 1 `Done` sonrası)**
