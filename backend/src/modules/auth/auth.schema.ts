@@ -1,20 +1,30 @@
 import { z } from 'zod';
 
+const emailField = z
+  .string({ required_error: 'E-posta zorunludur.' })
+  .trim()
+  .toLowerCase()
+  .email('Geçerli bir e-posta adresi giriniz.');
+
 export const registerSchema = z.object({
   name: z
     .string({ required_error: 'Ad soyad zorunludur.' })
     .trim()
     .min(2, 'Ad soyad en az 2 karakter olmalıdır.')
     .max(80, 'Ad soyad en fazla 80 karakter olabilir.'),
-  email: z
-    .string({ required_error: 'E-posta zorunludur.' })
-    .trim()
-    .toLowerCase()
-    .email('Geçerli bir e-posta adresi giriniz.'),
+  email: emailField,
   password: z
     .string({ required_error: 'Şifre zorunludur.' })
     .min(8, 'Şifre en az 8 karakter olmalıdır.')
     .max(72, 'Şifre en fazla 72 karakter olabilir.'),
 });
 
+export const loginSchema = z.object({
+  email: emailField,
+  password: z
+    .string({ required_error: 'Şifre zorunludur.' })
+    .min(1, 'Şifre zorunludur.'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;

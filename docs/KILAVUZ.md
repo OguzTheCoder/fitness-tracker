@@ -35,8 +35,8 @@ Fitness Tracker/
 - [x] Jira (`AUTH`, 5 sütun, `AUTH-1`..`AUTH-7`) + Public GitHub repo + `GitHub for Jira`
 
 **Faz 1 — Authentication (`In Progress → Branch → Smart Commit → PR/Code Review → Testing → Done`)**
-- [ ] `AUTH-4` Backend iskelet, Prisma/SQLite ve Register API
-- [ ] `AUTH-5` Backend Login ve `/me` API
+- [x] `AUTH-4` Backend iskelet, Prisma/SQLite ve Register API
+- [x] `AUTH-5` Backend Login ve `/me` API
 - [ ] `AUTH-6` Backend Şifre Sıfırlama API + `MailProvider`
 - [ ] `AUTH-1` Frontend iskelet ve Kayıt ekranı
 - [ ] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
