@@ -39,7 +39,7 @@ Fitness Tracker/
 - [x] `AUTH-5` Backend Login ve `/me` API
 - [x] `AUTH-6` Backend Şifre Sıfırlama API + `MailProvider`
 - [x] `AUTH-1` Frontend iskelet ve Kayıt ekranı
-- [ ] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
+- [x] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
 - [ ] `AUTH-3` Frontend Şifre Sıfırlama ekranları
 - [ ] `AUTH-7` Backend + Frontend entegrasyon testleri
 
