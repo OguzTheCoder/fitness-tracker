@@ -38,7 +38,7 @@ Fitness Tracker/
 - [x] `AUTH-4` Backend iskelet, Prisma/SQLite ve Register API
 - [x] `AUTH-5` Backend Login ve `/me` API
 - [x] `AUTH-6` Backend Şifre Sıfırlama API + `MailProvider`
-- [ ] `AUTH-1` Frontend iskelet ve Kayıt ekranı
+- [x] `AUTH-1` Frontend iskelet ve Kayıt ekranı
 - [ ] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
 - [ ] `AUTH-3` Frontend Şifre Sıfırlama ekranları
 - [ ] `AUTH-7` Backend + Frontend entegrasyon testleri
@@ -49,3 +49,4 @@ Fitness Tracker/
 ## 5. Çalıştırma
 - **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`
 - **Backend geliştirme & derleme:** `npm --prefix backend run dev` · `npm --prefix backend run typecheck` · `npm --prefix backend run build`
+- **Frontend kurulum & derleme:** `npm install --prefix frontend` · `npm --prefix frontend run dev` · `npm --prefix frontend run build`
