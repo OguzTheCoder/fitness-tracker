@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/AuthLayout';
 import { FormField } from '../components/FormField';
+import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
-import { authService, type User } from '../services/authService';
 
 interface FormErrors {
   name?: string;
@@ -11,8 +11,6 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
 }
-
-const TOKEN_STORAGE_KEY = 'ft_auth_token';
 
 function validateRegister(values: {
   name: string;
@@ -37,13 +35,15 @@ function validateRegister(values: {
 }
 
 export function RegisterPage() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
-  const [registeredUser, setRegisteredUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -52,19 +52,12 @@ export function RegisterPage() {
 
     const clientErrors = validateRegister({ name, email, password, confirmPassword });
     setFieldErrors(clientErrors);
-    if (Object.keys(clientErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(clientErrors).length > 0) return;
 
     setIsSubmitting(true);
     try {
-      const result = await authService.register({
-        name: name.trim(),
-        email: email.trim(),
-        password,
-      });
-      localStorage.setItem(TOKEN_STORAGE_KEY, result.token);
-      setRegisteredUser(result.user);
+      await register({ name: name.trim(), email: email.trim(), password });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
         setServerError(err.message);
@@ -96,92 +89,72 @@ export function RegisterPage() {
         </>
       }
     >
-      {registeredUser ? (
-        <div
-          role="status"
-          className="space-y-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-center"
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {serverError && (
+          <div
+            role="alert"
+            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
+          >
+            {serverError}
+          </div>
+        )}
+
+        <FormField
+          id="name"
+          name="name"
+          label="Ad Soyad"
+          type="text"
+          autoComplete="name"
+          placeholder="Örn. Oğuz Yılmaz"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={fieldErrors.name}
+        />
+
+        <FormField
+          id="email"
+          name="email"
+          label="E-posta"
+          type="email"
+          autoComplete="email"
+          placeholder="ornek@eposta.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={fieldErrors.email}
+        />
+
+        <FormField
+          id="password"
+          name="password"
+          label="Şifre"
+          type="password"
+          autoComplete="new-password"
+          placeholder="En az 8 karakter"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={fieldErrors.password}
+        />
+
+        <FormField
+          id="confirmPassword"
+          name="confirmPassword"
+          label="Şifre Tekrar"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Şifreni tekrar yaz"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          error={fieldErrors.confirmPassword}
+        />
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <p className="text-base font-semibold text-emerald-300">
-            Hoş geldin, {registeredUser.name}!
-          </p>
-          <p className="text-sm text-slate-300">
-            Hesabın ({registeredUser.email}) başarıyla oluşturuldu.
-          </p>
-          <Link
-            to="/login"
-            className="inline-block w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-          >
-            Giriş Sayfasına Git
-          </Link>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {serverError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-            >
-              {serverError}
-            </div>
-          )}
-
-          <FormField
-            id="name"
-            name="name"
-            label="Ad Soyad"
-            type="text"
-            autoComplete="name"
-            placeholder="Örn. Oğuz Yılmaz"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            error={fieldErrors.name}
-          />
-
-          <FormField
-            id="email"
-            name="email"
-            label="E-posta"
-            type="email"
-            autoComplete="email"
-            placeholder="ornek@eposta.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={fieldErrors.email}
-          />
-
-          <FormField
-            id="password"
-            name="password"
-            label="Şifre"
-            type="password"
-            autoComplete="new-password"
-            placeholder="En az 8 karakter"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={fieldErrors.password}
-          />
-
-          <FormField
-            id="confirmPassword"
-            name="confirmPassword"
-            label="Şifre Tekrar"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Şifreni tekrar yaz"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            error={fieldErrors.confirmPassword}
-          />
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
-          </button>
-        </form>
-      )}
+          {isSubmitting ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
+        </button>
+      </form>
     </AuthLayout>
   );
 }
