@@ -1,0 +1,13 @@
+# Ajan kural dosyası ve yerel makine kayıtları (yalnızca yerel)
+AGENTS.md
+docs/INDIRMELER.md
+
+# Ortam değişkenleri ve gizli anahtarlar (Public repo güvenliği)
+.env
+.env.*
+!.env.example
+
+# İşletim sistemi ve editör kalıntıları
+.DS_Store
+Thumbs.db
+*.log
