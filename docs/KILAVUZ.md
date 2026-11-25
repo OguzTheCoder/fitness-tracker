@@ -41,7 +41,7 @@ Fitness Tracker/
 - [x] `AUTH-1` Frontend iskelet ve Kayıt ekranı
 - [x] `AUTH-2` Frontend Giriş ekranı ve JWT oturum yönetimi
 - [x] `AUTH-3` Frontend Şifre Sıfırlama ekranları
-- [ ] `AUTH-7` Backend + Frontend entegrasyon testleri
+- [x] `AUTH-7` Backend + Frontend entegrasyon testleri
 
 **Faz 2 — Fitness Tracker MVP (Faz 1 `Done` sonrası)**
 - [ ] `AUTH-8` Günlük Kilo Takibi · `AUTH-9` Manuel Kalori · `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Testler
@@ -50,3 +50,4 @@ Fitness Tracker/
 - **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`
 - **Backend geliştirme & derleme:** `npm --prefix backend run dev` · `npm --prefix backend run typecheck` · `npm --prefix backend run build`
 - **Frontend kurulum & derleme:** `npm install --prefix frontend` · `npm --prefix frontend run dev` · `npm --prefix frontend run build`
+- **Entegrasyon testleri:** `npm --prefix backend run test` · `npm --prefix frontend run test`
