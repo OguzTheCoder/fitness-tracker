@@ -5,6 +5,7 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { caloriesRouter } from './modules/calories/calories.routes.js';
 import { weightsRouter } from './modules/weights/weights.routes.js';
+import { workoutsRouter } from './modules/workouts/workouts.routes.js';
 
 export function createApp() {
   const app = express();
@@ -19,6 +20,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/weights', weightsRouter);
   app.use('/api/calories', caloriesRouter);
+  app.use('/api/workouts', workoutsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

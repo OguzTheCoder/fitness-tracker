@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { WeightsPage } from './pages/WeightsPage';
+import { WorkoutsPage } from './pages/WorkoutsPage';
 
 export function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ export function AppRoutes() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/weights" element={<WeightsPage />} />
             <Route path="/calories" element={<CaloriesPage />} />
+            <Route path="/workouts" element={<WorkoutsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

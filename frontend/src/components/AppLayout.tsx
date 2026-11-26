@@ -11,7 +11,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Özet', enabled: true },
   { to: '/weights', label: 'Kilo', enabled: true },
   { to: '/calories', label: 'Kalori', enabled: true },
-  { to: '/workouts', label: 'Antrenman', enabled: false },
+  { to: '/workouts', label: 'Antrenman', enabled: true },
 ];
 
 export function AppLayout() {
