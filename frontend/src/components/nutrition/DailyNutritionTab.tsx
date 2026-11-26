@@ -9,12 +9,15 @@ import {
   type Recipe,
 } from '../../services/nutritionService';
 import { formatTurkishDate, getTodayIsoDate } from '../../utils/date';
+import { BarcodeLookupPanel } from './BarcodeLookupPanel';
 
 const MEAL_PRESETS = ['Kahvaltı', 'Öğle', 'Akşam', 'Ara Öğün'];
 
 interface DailyNutritionTabProps {
   foods: FoodItem[];
   recipes: Recipe[];
+  onCatalogChanged: () => Promise<void>;
+  onDefineCustomFood: (barcode: string) => void;
 }
 
 function shiftIsoDate(isoDate: string, deltaDays: number): string {
@@ -30,11 +33,17 @@ function clampPercent(value: number, goal: number): number {
   return Math.min(100, Math.round((value / goal) * 100));
 }
 
-export function DailyNutritionTab({ foods, recipes }: DailyNutritionTabProps) {
+export function DailyNutritionTab({
+  foods,
+  recipes,
+  onCatalogChanged,
+  onDefineCustomFood,
+}: DailyNutritionTabProps) {
   const [date, setDate] = useState(getTodayIsoDate);
   const [data, setData] = useState<NutritionLogsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showBarcodePanel, setShowBarcodePanel] = useState(false);
 
   const [kind, setKind] = useState<'food' | 'recipe'>('food');
   const [mealLabel, setMealLabel] = useState('');
@@ -79,7 +88,8 @@ export function DailyNutritionTab({ foods, recipes }: DailyNutritionTabProps) {
     return foods.filter(
       (f) =>
         f.name.toLocaleLowerCase('tr-TR').includes(needle) ||
-        (f.brand?.toLocaleLowerCase('tr-TR').includes(needle) ?? false),
+        (f.brand?.toLocaleLowerCase('tr-TR').includes(needle) ?? false) ||
+        (f.barcode?.toLocaleLowerCase('tr-TR').includes(needle) ?? false),
     );
   }, [foods, foodSearch]);
 
@@ -298,8 +308,33 @@ export function DailyNutritionTab({ foods, recipes }: DailyNutritionTabProps) {
             Bugün
           </button>
         </div>
-        <span className="text-sm font-medium text-slate-300">{formatTurkishDate(date)}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-slate-300">{formatTurkishDate(date)}</span>
+          <button
+            type="button"
+            aria-expanded={showBarcodePanel}
+            onClick={() => setShowBarcodePanel((prev) => !prev)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              showBarcodePanel
+                ? 'border border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+            }`}
+          >
+            {showBarcodePanel ? 'Tarayıcıyı Kapat' : 'Barkod / QR Tara'}
+          </button>
+        </div>
       </section>
+
+      {showBarcodePanel && (
+        <BarcodeLookupPanel
+          date={date}
+          mealLabel={mealLabel}
+          onLogged={() => loadDay(date)}
+          onFoodCached={onCatalogChanged}
+          onDefineCustomFood={onDefineCustomFood}
+          onClose={() => setShowBarcodePanel(false)}
+        />
+      )}
 
       {loadError && (
         <div

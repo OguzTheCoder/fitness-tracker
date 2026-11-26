@@ -100,6 +100,7 @@ model Food {
   user                  User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   isCore                Boolean        @default(false)
   coreKey               String?        @unique
+  barcode               String?
   name                  String
   brand                 String?
   category              String?
@@ -115,8 +116,10 @@ model Food {
   recipeItems           RecipeItem[]
   nutritionLogs         NutritionLog[]
 
+  @@unique([userId, barcode])
   @@index([userId, name])
   @@index([isCore, name])
+  @@index([isCore, barcode])
 }
 
 model Recipe {

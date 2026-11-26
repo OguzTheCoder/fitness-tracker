@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../../middlewares/authenticate.js';
-import { foodBodySchema, foodListQuerySchema } from './foods.schema.js';
-import { createFood, deleteFood, getFoodById, listFoods, updateFood } from './foods.service.js';
+import { barcodeCodeSchema, foodBodySchema, foodListQuerySchema } from './foods.schema.js';
+import {
+  createFood,
+  deleteFood,
+  getFoodById,
+  listFoods,
+  lookupFoodByBarcode,
+  updateFood,
+} from './foods.service.js';
 
 export const foodsRouter = Router();
 
@@ -10,6 +17,12 @@ foodsRouter.use(authenticate);
 foodsRouter.get('/', async (req, res) => {
   const query = foodListQuerySchema.parse(req.query);
   const result = await listFoods(req.authUser!.id, query);
+  res.status(200).json(result);
+});
+
+foodsRouter.get('/barcode/:code', async (req, res) => {
+  const code = barcodeCodeSchema.parse(String(req.params.code));
+  const result = await lookupFoodByBarcode(req.authUser!.id, code);
   res.status(200).json(result);
 });
 
