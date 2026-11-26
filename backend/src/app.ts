@@ -33,7 +33,7 @@ const AUTH_WRITE_PATHS = [
 
 export function createApp(options?: CreateAppOptions) {
   const app = express();
-  const { apiLimiter, authWriteLimiters } = createRateLimiters(options?.rateLimit);
+  const { apiLimiter, authWriteLimiters, barcodeLimiter } = createRateLimiters(options?.rateLimit);
 
   if (options?.appPin !== undefined) {
     app.locals.appPin = options.appPin;
@@ -50,6 +50,7 @@ export function createApp(options?: CreateAppOptions) {
 
   app.use('/api', apiLimiter);
   app.post(AUTH_WRITE_PATHS, ...authWriteLimiters);
+  app.use('/api/foods/barcode', barcodeLimiter);
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'fitness-tracker-backend' });

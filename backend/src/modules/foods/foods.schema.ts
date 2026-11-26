@@ -1,6 +1,34 @@
 import { z } from 'zod';
 import { VALID_MICRONUTRIENT_KEYS } from '../profile/profile.constants.js';
 
+export const BARCODE_CODE_REGEX = /^[A-Za-z0-9_-]{4,64}$/;
+export const STANDARD_BARCODE_REGEX = /^\d{8,14}$/;
+
+export function isStandardBarcode(code: string): boolean {
+  return STANDARD_BARCODE_REGEX.test(code);
+}
+
+export const barcodeCodeSchema = z
+  .string()
+  .trim()
+  .min(4, 'Barkod / QR kodu en az 4 karakter olmalıdır.')
+  .max(64, 'Barkod / QR kodu en fazla 64 karakter olabilir.')
+  .regex(
+    BARCODE_CODE_REGEX,
+    'Barkod / QR kodu yalnızca harf, rakam, tire (-) ve alt çizgi (_) içerebilir.',
+  );
+
+const optionalBarcodeSchema = z
+  .string()
+  .trim()
+  .transform((val) => (val === '' ? null : val))
+  .refine((val) => val === null || BARCODE_CODE_REGEX.test(val), {
+    message:
+      'Barkod / QR kodu 4–64 karakter olmalı ve yalnızca harf, rakam, tire (-) veya alt çizgi (_) içermelidir.',
+  })
+  .nullable()
+  .optional();
+
 const optionalTrimmedString = (max: number, label: string) =>
   z
     .string()
@@ -31,6 +59,7 @@ export const micronutrientsRecordSchema = z
 
 export const foodBodySchema = z
   .object({
+    barcode: optionalBarcodeSchema,
     name: z
       .string()
       .trim()

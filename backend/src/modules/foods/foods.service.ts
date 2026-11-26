@@ -7,14 +7,30 @@ import {
   serializeMicronutrients,
   type MicronutrientMap,
 } from '../nutrition/nutrition.math.js';
-import type { FoodBodyInput, FoodListQuery } from './foods.schema.js';
+import { getBarcodeProvider } from './barcode.provider.js';
+import { isStandardBarcode, type FoodBodyInput, type FoodListQuery } from './foods.schema.js';
 import { ensureCoreFoodsSeeded } from './foods.seed.js';
 
 const MAX_SEARCH_SCAN = 500;
 
+function isUniqueConstraintError(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002';
+}
+
+export type BarcodeLookupSource = 'local' | 'core' | 'open_food_facts' | 'not_found';
+
+export interface BarcodeLookupResult {
+  found: boolean;
+  source: BarcodeLookupSource;
+  barcode: string;
+  food: FoodDto | null;
+  externalError?: string;
+}
+
 export interface FoodDto {
   id: string;
   isCore: boolean;
+  barcode: string | null;
   name: string;
   brand: string | null;
   category: string | null;
@@ -33,6 +49,7 @@ export function toFoodDto(food: Food): FoodDto {
   return {
     id: food.id,
     isCore: food.isCore,
+    barcode: food.barcode,
     name: food.name,
     brand: food.brand,
     category: food.category,
@@ -78,7 +95,10 @@ export async function listFoods(userId: string, query: FoodListQuery) {
       const categoryMatch = food.category
         ? food.category.toLocaleLowerCase('tr-TR').includes(needle)
         : false;
-      return nameMatch || brandMatch || categoryMatch;
+      const barcodeMatch = food.barcode
+        ? food.barcode.toLocaleLowerCase('tr-TR').includes(needle)
+        : false;
+      return nameMatch || brandMatch || categoryMatch || barcodeMatch;
     });
 
     const paged = filtered.slice(query.offset, query.offset + query.limit);
@@ -121,25 +141,101 @@ export async function getFoodById(userId: string, id: string) {
   return { food: toFoodDto(food) };
 }
 
-export async function createFood(userId: string, input: FoodBodyInput) {
-  const food = await prisma.food.create({
-    data: {
-      userId,
-      isCore: false,
-      name: input.name,
-      brand: input.brand ?? null,
-      category: input.category ?? null,
-      servingLabel: input.servingLabel ?? (input.servingGrams ? '1 porsiyon' : null),
-      servingGrams: input.servingGrams ?? null,
-      caloriesPer100g: round1(input.caloriesPer100g),
-      proteinPer100g: round1(input.proteinPer100g),
-      carbsPer100g: round1(input.carbsPer100g),
-      fatPer100g: round1(input.fatPer100g),
-      micronutrientsPer100g: serializeMicronutrients(input.micronutrientsPer100g),
-    },
-  });
+function buildFoodPersistenceData(input: FoodBodyInput) {
+  return {
+    barcode: input.barcode ?? null,
+    name: input.name,
+    brand: input.brand ?? null,
+    category: input.category ?? null,
+    servingLabel: input.servingLabel ?? (input.servingGrams ? '1 porsiyon' : null),
+    servingGrams: input.servingGrams ?? null,
+    caloriesPer100g: round1(input.caloriesPer100g),
+    proteinPer100g: round1(input.proteinPer100g),
+    carbsPer100g: round1(input.carbsPer100g),
+    fatPer100g: round1(input.fatPer100g),
+    micronutrientsPer100g: serializeMicronutrients(input.micronutrientsPer100g),
+  };
+}
 
-  return { food: toFoodDto(food) };
+export async function lookupFoodByBarcode(
+  userId: string,
+  barcode: string,
+): Promise<BarcodeLookupResult> {
+  await ensureCoreFoodsSeeded();
+
+  const localFood = await prisma.food.findFirst({
+    where: { userId, barcode },
+  });
+  if (localFood) {
+    return { found: true, source: 'local', barcode, food: toFoodDto(localFood) };
+  }
+
+  const coreFood = await prisma.food.findFirst({
+    where: { isCore: true, barcode },
+  });
+  if (coreFood) {
+    return { found: true, source: 'core', barcode, food: toFoodDto(coreFood) };
+  }
+
+  if (!isStandardBarcode(barcode)) {
+    return { found: false, source: 'not_found', barcode, food: null };
+  }
+
+  let externalProduct;
+  try {
+    externalProduct = await getBarcodeProvider().lookup(barcode);
+  } catch {
+    return {
+      found: false,
+      source: 'not_found',
+      barcode,
+      food: null,
+      externalError:
+        'Open Food Facts servisine şu an ulaşılamadı. Bu kodu kendi besinin olarak tanımlayabilirsin.',
+    };
+  }
+
+  if (!externalProduct) {
+    return { found: false, source: 'not_found', barcode, food: null };
+  }
+
+  try {
+    const cached = await prisma.food.create({
+      data: {
+        userId,
+        isCore: false,
+        ...buildFoodPersistenceData(externalProduct),
+      },
+    });
+    return { found: true, source: 'open_food_facts', barcode, food: toFoodDto(cached) };
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      const existing = await prisma.food.findFirst({ where: { userId, barcode } });
+      if (existing) {
+        return { found: true, source: 'local', barcode, food: toFoodDto(existing) };
+      }
+    }
+    throw err;
+  }
+}
+
+export async function createFood(userId: string, input: FoodBodyInput) {
+  try {
+    const food = await prisma.food.create({
+      data: {
+        userId,
+        isCore: false,
+        ...buildFoodPersistenceData(input),
+      },
+    });
+
+    return { food: toFoodDto(food) };
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      throw new AppError(409, 'Bu barkod / QR kodu başka bir besininizde zaten kayıtlı.');
+    }
+    throw err;
+  }
 }
 
 export async function updateFood(userId: string, id: string, input: FoodBodyInput) {
@@ -156,23 +252,19 @@ export async function updateFood(userId: string, id: string, input: FoodBodyInpu
     throw new AppError(403, 'Çekirdek besinler düzenlenemez.');
   }
 
-  const food = await prisma.food.update({
-    where: { id },
-    data: {
-      name: input.name,
-      brand: input.brand ?? null,
-      category: input.category ?? null,
-      servingLabel: input.servingLabel ?? (input.servingGrams ? '1 porsiyon' : null),
-      servingGrams: input.servingGrams ?? null,
-      caloriesPer100g: round1(input.caloriesPer100g),
-      proteinPer100g: round1(input.proteinPer100g),
-      carbsPer100g: round1(input.carbsPer100g),
-      fatPer100g: round1(input.fatPer100g),
-      micronutrientsPer100g: serializeMicronutrients(input.micronutrientsPer100g),
-    },
-  });
+  try {
+    const food = await prisma.food.update({
+      where: { id },
+      data: buildFoodPersistenceData(input),
+    });
 
-  return { food: toFoodDto(food) };
+    return { food: toFoodDto(food) };
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      throw new AppError(409, 'Bu barkod / QR kodu başka bir besininizde zaten kayıtlı.');
+    }
+    throw err;
+  }
 }
 
 export async function deleteFood(userId: string, id: string) {

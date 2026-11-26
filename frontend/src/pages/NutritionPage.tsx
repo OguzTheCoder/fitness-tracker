@@ -21,11 +21,21 @@ const TABS: { key: ActiveTab; label: string }[] = [
 
 export function NutritionPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('daily');
+  const [pendingBarcode, setPendingBarcode] = useState<string | null>(null);
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [availableMicronutrients, setAvailableMicronutrients] = useState<MicronutrientMeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const handleDefineCustomFoodFromBarcode = useCallback((code: string) => {
+    setPendingBarcode(code);
+    setActiveTab('foods');
+  }, []);
+
+  const handleConsumePendingBarcode = useCallback(() => {
+    setPendingBarcode(null);
+  }, []);
 
   const loadCatalog = useCallback(async () => {
     setLoadError(null);
@@ -103,11 +113,18 @@ export function NutritionPage() {
           Beslenme verileri yükleniyor...
         </section>
       ) : activeTab === 'daily' ? (
-        <DailyNutritionTab foods={foods} recipes={recipes} />
+        <DailyNutritionTab
+          foods={foods}
+          recipes={recipes}
+          onCatalogChanged={loadCatalog}
+          onDefineCustomFood={handleDefineCustomFoodFromBarcode}
+        />
       ) : activeTab === 'foods' ? (
         <FoodsTab
           foods={foods}
           availableMicronutrients={availableMicronutrients}
+          prefillBarcode={pendingBarcode}
+          onPrefillConsumed={handleConsumePendingBarcode}
           onChanged={loadCatalog}
         />
       ) : (

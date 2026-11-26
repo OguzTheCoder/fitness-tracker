@@ -14,6 +14,7 @@ export interface NutrientTotals {
 export interface FoodItem {
   id: string;
   isCore: boolean;
+  barcode: string | null;
   name: string;
   brand: string | null;
   category: string | null;
@@ -29,6 +30,7 @@ export interface FoodItem {
 }
 
 export interface FoodPayload {
+  barcode?: string | null;
   name: string;
   brand?: string | null;
   category?: string | null;
@@ -39,6 +41,16 @@ export interface FoodPayload {
   carbsPer100g: number;
   fatPer100g: number;
   micronutrientsPer100g?: MicronutrientMap;
+}
+
+export type BarcodeLookupSource = 'local' | 'core' | 'open_food_facts' | 'not_found';
+
+export interface BarcodeLookupResponse {
+  found: boolean;
+  source: BarcodeLookupSource;
+  barcode: string;
+  food: FoodItem | null;
+  externalError?: string;
 }
 
 export interface RecipeItemDto extends NutrientTotals {
@@ -166,6 +178,11 @@ export const foodService = {
       })}`,
       { method: 'GET' },
     ),
+
+  lookupBarcode: (code: string) =>
+    apiRequest<BarcodeLookupResponse>(`/foods/barcode/${encodeURIComponent(code.trim())}`, {
+      method: 'GET',
+    }),
 
   create: (payload: FoodPayload) =>
     apiRequest<{ food: FoodItem }>('/foods', { method: 'POST', body: payload }),

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ApiError } from '../../services/api';
 import {
   foodService,
@@ -12,6 +12,8 @@ import { FormField } from '../FormField';
 interface FoodsTabProps {
   foods: FoodItem[];
   availableMicronutrients: MicronutrientMeta[];
+  prefillBarcode?: string | null;
+  onPrefillConsumed?: () => void;
   onChanged: () => Promise<void>;
 }
 
@@ -24,11 +26,18 @@ const DEFAULT_MINERAL_META: MicronutrientMeta[] = [
   { key: 'Zn', label: 'Çinko (Zn)', unit: 'mg', category: 'mineral' },
 ];
 
-export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTabProps) {
+export function FoodsTab({
+  foods,
+  availableMicronutrients,
+  prefillBarcode,
+  onPrefillConsumed,
+  onChanged,
+}: FoodsTabProps) {
   const [search, setSearch] = useState('');
   const [scope, setScope] = useState<'all' | 'core' | 'custom'>('all');
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [barcode, setBarcode] = useState('');
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
@@ -46,6 +55,15 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!prefillBarcode) return;
+    setEditingId(null);
+    setBarcode(prefillBarcode);
+    setFormError(null);
+    setFeedback(`Barkod / QR kodu forma aktarıldı: ${prefillBarcode}`);
+    onPrefillConsumed?.();
+  }, [prefillBarcode, onPrefillConsumed]);
+
   const microCatalog =
     availableMicronutrients.length > 0 ? availableMicronutrients : DEFAULT_MINERAL_META;
 
@@ -58,13 +76,15 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
       return (
         food.name.toLocaleLowerCase('tr-TR').includes(needle) ||
         (food.brand?.toLocaleLowerCase('tr-TR').includes(needle) ?? false) ||
-        (food.category?.toLocaleLowerCase('tr-TR').includes(needle) ?? false)
+        (food.category?.toLocaleLowerCase('tr-TR').includes(needle) ?? false) ||
+        (food.barcode?.toLocaleLowerCase('tr-TR').includes(needle) ?? false)
       );
     });
   }, [foods, search, scope]);
 
   function resetForm() {
     setEditingId(null);
+    setBarcode('');
     setName('');
     setBrand('');
     setCategory('');
@@ -80,6 +100,7 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
 
   function startEdit(food: FoodItem) {
     setEditingId(food.id);
+    setBarcode(food.barcode ?? '');
     setName(food.name);
     setBrand(food.brand ?? '');
     setCategory(food.category ?? '');
@@ -136,6 +157,7 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
     }
 
     const payload: FoodPayload = {
+      barcode: barcode.trim() || null,
       name: name.trim(),
       brand: brand.trim() || null,
       category: category.trim() || null,
@@ -207,7 +229,7 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FormField
               id="food-name"
               label="Besin Adı"
@@ -215,6 +237,14 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
               placeholder="Örn. Protein Bar"
               value={name}
               onChange={(e) => setName(e.target.value)}
+            />
+            <FormField
+              id="food-barcode"
+              label="Barkod / QR Kodu (Opsiyonel)"
+              type="text"
+              placeholder="Örn. 8690526012345"
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
             />
             <FormField
               id="food-brand"
@@ -358,7 +388,7 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
             <input
               aria-label="Besin ara"
               type="text"
-              placeholder="Besin, marka veya kategori ara..."
+              placeholder="Besin, marka, kategori veya barkod ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-64 rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-white outline-none focus:border-emerald-400"
@@ -410,6 +440,11 @@ export function FoodsTab({ foods, availableMicronutrients, onChanged }: FoodsTab
                     </span>
                     {food.category && (
                       <span className="text-[11px] text-slate-500">{food.category}</span>
+                    )}
+                    {food.barcode && (
+                      <span className="rounded bg-slate-800/80 px-1.5 py-0.5 font-mono text-[11px] text-slate-300">
+                        {food.barcode}
+                      </span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-slate-400">

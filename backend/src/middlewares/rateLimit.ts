@@ -6,6 +6,7 @@ export interface RateLimitConfig {
   apiMax: number;
   authIpMax: number;
   authAccountMax: number;
+  barcodeMax: number;
 }
 
 const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
@@ -13,6 +14,7 @@ const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   apiMax: 300,
   authIpMax: 25,
   authAccountMax: 10,
+  barcodeMax: 40,
 };
 
 const RATE_LIMIT_MESSAGE = {
@@ -29,6 +31,7 @@ function extractNormalizedEmail(req: Request): string | null {
 export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
   apiLimiter: RequestHandler;
   authWriteLimiters: RequestHandler[];
+  barcodeLimiter: RequestHandler;
 } {
   const config: RateLimitConfig = { ...DEFAULT_RATE_LIMIT_CONFIG, ...overrides };
 
@@ -59,8 +62,18 @@ export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
     message: RATE_LIMIT_MESSAGE,
   });
 
+  const barcodeLimiter = rateLimit({
+    windowMs: config.windowMs,
+    limit: config.barcodeMax,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? '127.0.0.1'),
+    message: RATE_LIMIT_MESSAGE,
+  });
+
   return {
     apiLimiter,
     authWriteLimiters: [authIpLimiter, authAccountLimiter],
+    barcodeLimiter,
   };
 }
