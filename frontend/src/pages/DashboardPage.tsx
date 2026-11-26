@@ -14,35 +14,39 @@ export function DashboardPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Link
-          to="/weights"
-          className="group rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-emerald-500/50 hover:bg-slate-900"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-white group-hover:text-emerald-300">
-              Günlük Kilo
-            </h2>
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
-              Aktif
-            </span>
-          </div>
-          <p className="mt-1.5 text-xs text-slate-400">
-            Günlük kilonu kaydet, tarih aralığına göre geçmişini incele.
-          </p>
-        </Link>
-
         {[
-          { title: 'Kalori Takibi', desc: 'Faz 2 (AUTH-9) ile eklenecek.' },
-          { title: 'Antrenman Kaydı', desc: 'Faz 2 (AUTH-10) ile eklenecek.' },
+          {
+            to: '/weights',
+            title: 'Günlük Kilo',
+            desc: 'Günlük kilonu kaydet, tarih aralığına göre geçmişini incele.',
+          },
+          {
+            to: '/calories',
+            title: 'Kalori Takibi',
+            desc: 'Öğünlerini kaydet ve günlük toplam kalori alımını takip et.',
+          },
         ].map((card) => (
-          <div
-            key={card.title}
-            className="rounded-xl border border-slate-800 bg-slate-900/40 p-5"
+          <Link
+            key={card.to}
+            to={card.to}
+            className="group rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-emerald-500/50 hover:bg-slate-900"
           >
-            <h2 className="text-base font-semibold text-slate-300">{card.title}</h2>
-            <p className="mt-1.5 text-xs text-slate-500">{card.desc}</p>
-          </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-white group-hover:text-emerald-300">
+                {card.title}
+              </h2>
+              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                Aktif
+              </span>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-400">{card.desc}</p>
+          </Link>
         ))}
+
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+          <h2 className="text-base font-semibold text-slate-300">Antrenman Kaydı</h2>
+          <p className="mt-1.5 text-xs text-slate-500">Faz 2 (AUTH-10) ile eklenecek.</p>
+        </div>
       </section>
     </div>
   );

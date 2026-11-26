@@ -3,6 +3,7 @@ import express from 'express';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { caloriesRouter } from './modules/calories/calories.routes.js';
 import { weightsRouter } from './modules/weights/weights.routes.js';
 
 export function createApp() {
@@ -17,6 +18,7 @@ export function createApp() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/weights', weightsRouter);
+  app.use('/api/calories', caloriesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

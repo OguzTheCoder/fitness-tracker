@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { CaloriesPage } from './pages/CaloriesPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { LoginPage } from './pages/LoginPage';
@@ -21,6 +22,7 @@ export function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/weights" element={<WeightsPage />} />
+            <Route path="/calories" element={<CaloriesPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
