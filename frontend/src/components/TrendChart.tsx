@@ -7,7 +7,7 @@ interface TrendChartProps {
   subtitle: string;
   data: TrendPoint[];
   unit: string;
-  accent?: 'emerald' | 'sky';
+  accent?: 'emerald' | 'sky' | 'amber';
   emptyMessage: string;
 }
 
@@ -21,6 +21,11 @@ const ACCENT_STYLES = {
     stroke: '#38bdf8',
     fill: '#0ea5e9',
     badge: 'bg-sky-500/15 text-sky-300',
+  },
+  amber: {
+    stroke: '#fbbf24',
+    fill: '#f59e0b',
+    badge: 'bg-amber-500/15 text-amber-300',
   },
 };
 
@@ -113,7 +118,10 @@ export function TrendChart({
 
         {yTicks.map((tick, idx) => {
           const y = PAD.top + (idx / (yTicks.length - 1)) * innerHeight;
-          const label = Number.isInteger(rawMax) && unit === 'kcal' ? Math.round(tick) : tick.toFixed(1);
+          const label =
+            Number.isInteger(rawMax) && (unit === 'kcal' || unit === 'adım')
+              ? Math.round(tick)
+              : tick.toFixed(1);
           return (
             <g key={idx}>
               <line

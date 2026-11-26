@@ -22,6 +22,10 @@ model User {
   weightEntries       WeightEntry[]
   calorieEntries      CalorieEntry[]
   workoutEntries      WorkoutEntry[]
+  exercises           Exercise[]
+  workoutTemplates    WorkoutTemplate[]
+  cardioEntries       CardioEntry[]
+  stepEntries         StepEntry[]
   foods               Food[]
   recipes             Recipe[]
   nutritionLogs       NutritionLog[]
@@ -81,16 +85,130 @@ model CalorieEntry {
 }
 
 model WorkoutEntry {
-  id              String   @id @default(cuid())
+  id              String            @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId      String?
+  template        WorkoutTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
   date            String
   name            String
   durationMinutes Int
   note            String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  exercises       WorkoutExercise[]
+
+  @@index([userId, date])
+  @@index([templateId])
+}
+
+model Exercise {
+  id                String                    @id @default(cuid())
+  userId            String?
+  user              User?                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCore            Boolean                   @default(false)
+  coreKey           String?                   @unique
+  name              String
+  muscleGroup       String
+  equipment         String?
+  isBodyweight      Boolean                   @default(false)
+  notes             String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  templateExercises WorkoutTemplateExercise[]
+  workoutExercises  WorkoutExercise[]
+
+  @@index([userId, name])
+  @@index([isCore, muscleGroup])
+  @@index([muscleGroup])
+}
+
+model WorkoutTemplate {
+  id          String                    @id @default(cuid())
+  userId      String
+  user        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  exercises   WorkoutTemplateExercise[]
+  workouts    WorkoutEntry[]
+
+  @@index([userId, name])
+}
+
+model WorkoutTemplateExercise {
+  id              String          @id @default(cuid())
+  templateId      String
+  template        WorkoutTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  exerciseId      String?
+  exercise        Exercise?       @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+  exerciseName    String
+  muscleGroup     String?
+  defaultSets     Int             @default(3)
+  defaultReps     Int             @default(10)
+  defaultWeightKg Float?
+  sortOrder       Int             @default(0)
+
+  @@index([templateId])
+  @@index([exerciseId])
+}
+
+model WorkoutExercise {
+  id           String       @id @default(cuid())
+  workoutId    String
+  workout      WorkoutEntry @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId   String?
+  exercise     Exercise?    @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+  exerciseName String
+  muscleGroup  String?
+  sortOrder    Int          @default(0)
+  note         String?
+  sets         WorkoutSet[]
+
+  @@index([workoutId])
+  @@index([exerciseId])
+  @@index([exerciseName])
+}
+
+model WorkoutSet {
+  id                String          @id @default(cuid())
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  setNumber         Int
+  reps              Int
+  weightKg          Float?
+
+  @@index([workoutExerciseId])
+}
+
+model CardioEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date            String
+  cardioType      String
+  durationMinutes Int
+  distanceKm      Float?
+  caloriesBurned  Int?
+  note            String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([userId, date])
+}
+
+model StepEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String
+  steps     Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
   @@index([userId, date])
 }
 

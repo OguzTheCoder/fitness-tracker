@@ -8,13 +8,17 @@ import { createRateLimiters, type RateLimitConfig } from './middlewares/rateLimi
 import { accessRouter } from './modules/access/access.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { caloriesRouter } from './modules/calories/calories.routes.js';
+import { cardioRouter } from './modules/cardio/cardio.routes.js';
+import { exercisesRouter } from './modules/exercises/exercises.routes.js';
 import { foodsRouter } from './modules/foods/foods.routes.js';
 import { nutritionRouter } from './modules/nutrition/nutrition.routes.js';
 import { profileRouter } from './modules/profile/profile.routes.js';
 import { recipesRouter } from './modules/recipes/recipes.routes.js';
 import { statsRouter } from './modules/stats/stats.routes.js';
+import { stepsRouter } from './modules/steps/steps.routes.js';
 import { weightsRouter } from './modules/weights/weights.routes.js';
 import { workoutsRouter } from './modules/workouts/workouts.routes.js';
+import { workoutTemplatesRouter } from './modules/workoutTemplates/workoutTemplates.routes.js';
 
 export interface CreateAppOptions {
   rateLimit?: Partial<RateLimitConfig>;
@@ -64,7 +68,11 @@ export function createApp(options?: CreateAppOptions) {
   app.use('/api/nutrition', nutritionRouter);
   app.use('/api/weights', weightsRouter);
   app.use('/api/calories', caloriesRouter);
+  app.use('/api/exercises', exercisesRouter);
+  app.use('/api/workout-templates', workoutTemplatesRouter);
   app.use('/api/workouts', workoutsRouter);
+  app.use('/api/cardio', cardioRouter);
+  app.use('/api/steps', stepsRouter);
   app.use('/api/stats', statsRouter);
 
   app.use(notFoundHandler);

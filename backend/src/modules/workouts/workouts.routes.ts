@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../../middlewares/authenticate.js';
-import { workoutEntrySchema, workoutListQuerySchema } from './workouts.schema.js';
+import {
+  previousPerformanceQuerySchema,
+  workoutEntrySchema,
+  workoutListQuerySchema,
+} from './workouts.schema.js';
 import {
   createWorkoutEntry,
   deleteWorkoutEntry,
+  getPreviousExercisePerformances,
   listWorkoutEntries,
   updateWorkoutEntry,
 } from './workouts.service.js';
@@ -11,6 +16,12 @@ import {
 export const workoutsRouter = Router();
 
 workoutsRouter.use(authenticate);
+
+workoutsRouter.get('/previous', async (req, res) => {
+  const query = previousPerformanceQuerySchema.parse(req.query);
+  const result = await getPreviousExercisePerformances(req.authUser!.id, query);
+  res.status(200).json(result);
+});
 
 workoutsRouter.get('/', async (req, res) => {
   const range = workoutListQuerySchema.parse(req.query);

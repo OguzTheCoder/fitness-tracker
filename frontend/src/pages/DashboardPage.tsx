@@ -63,6 +63,13 @@ export function DashboardPage() {
 
   const summary = stats?.summary;
   const weightDelta = formatWeightChange(summary?.weightChangeKg ?? null);
+  const todaySteps = summary?.todaySteps ?? 0;
+  const dailyStepGoal = summary?.dailyStepGoal ?? 8000;
+  const stepPercent = dailyStepGoal > 0 ? Math.round((todaySteps / dailyStepGoal) * 100) : 0;
+  const cardioCount = summary?.cardioCount ?? 0;
+  const cardioDurationMinutes = summary?.cardioDurationMinutes ?? 0;
+  const cardioDistanceKm = summary?.cardioDistanceKm ?? 0;
+  const stepTrend = stats?.trends.steps ?? [];
 
   return (
     <div className="space-y-6">
@@ -108,7 +115,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <section aria-label="Özet kartları" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Özet kartları" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
           <p className="text-xs font-medium text-slate-400">Son Kilo</p>
           <p className="mt-2 text-2xl font-bold text-white">
@@ -154,6 +161,30 @@ export function DashboardPage() {
           </p>
           <p className="mt-1 text-xs text-slate-400">Son {days} gün toplamı</p>
         </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <p className="text-xs font-medium text-slate-400">Kardiyo (Son {days} Gün)</p>
+          <p className="mt-2 text-2xl font-bold text-white">
+            {isLoading ? '...' : `${cardioDurationMinutes} dk`}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {isLoading
+              ? 'Yükleniyor...'
+              : `${cardioCount} seans${cardioDistanceKm > 0 ? ` · ${cardioDistanceKm} km` : ''}`}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <p className="text-xs font-medium text-slate-400">Bugünkü Adım</p>
+          <p className="mt-2 text-2xl font-bold text-white">
+            {isLoading ? '...' : todaySteps.toLocaleString('tr-TR')}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {isLoading
+              ? 'Yükleniyor...'
+              : `Hedef: ${dailyStepGoal.toLocaleString('tr-TR')} (%${stepPercent}) · Ort: ${(summary?.averageDailySteps ?? 0).toLocaleString('tr-TR')}`}
+          </p>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -175,6 +206,17 @@ export function DashboardPage() {
         />
       </section>
 
+      {stepTrend.length > 0 && (
+        <TrendChart
+          title="Günlük Adım Trendi"
+          subtitle={`Son ${days} gündeki günlük adım kayıtları`}
+          data={stepTrend}
+          unit="adım"
+          accent="amber"
+          emptyMessage="Bu dönem için adım kaydı bulunmuyor."
+        />
+      )}
+
       <section className="grid gap-4 sm:grid-cols-3">
         {[
           {
@@ -189,8 +231,8 @@ export function DashboardPage() {
           },
           {
             to: '/workouts',
-            title: 'Antrenman Kaydı',
-            desc: 'Antrenmanlarını süre ve notlarınla düzenli olarak kaydet.',
+            title: 'Antrenman, Kardiyo & Adım',
+            desc: 'Şablonlar, set × tekrar × ağırlık, kardiyo ve günlük adımlarını kaydet.',
           },
         ].map((card) => (
           <Link
