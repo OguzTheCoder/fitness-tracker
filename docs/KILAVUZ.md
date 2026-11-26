@@ -45,7 +45,7 @@ Fitness Tracker/
 **v1.0.1..v2.0.0 — Aşamalı SemVer Geliştirme (`main` + görev branch'i + Smart Commit + Git Tag)**
 - [x] **`v1.0.1` (`AUTH-8`) Güvenlik Sertleştirmesi & Hijyen:** `GUVENLIK.md` açıkları (`helmet`, rate limit, `tokenVersion`, JWT algoritma/secret, JSON/sayfalama sınırı, prod mail kilidi, `.gitignore` desenleri) + testler.
 - [x] **`v1.0.2` (`AUTH-9`) Kişisel Profil & Ortam Tabanlı PIN Kilidi:** Mevcut Auth kodlarını koruyarak profil/hedef/görünür mineral ayarları (`/api/profile`, `/profile`), varsayılan isimle başlangıç, canlıda `APP_PIN` ile kişisel PIN kilidi (`/api/access/*`) ve `G-005` `HttpOnly` kalıcı çerez oturumu.
-- [ ] **`v1.1.0` (`AUTH-10`) Beslenme Çekirdeği & Tarifler:** Temiz v2 beslenme şeması, temel besin dataset'i seed'i, kullanıcı besin/tarif CRUD'u, snapshot'lı günlük öğün kaydı (opsiyonel etiket) ve esnek mikro besin özetleri.
+- [x] **`v1.1.0` (`AUTH-10`) Beslenme Çekirdeği & Tarifler:** Temiz v2 beslenme şeması (`Food`, `Recipe`, `RecipeItem`, `NutritionLog`), 47 çekirdek temel besin seed'i, `/api/foods` + `/api/recipes` + snapshot'lı `/api/nutrition/logs` (porsiyon/gram/malzeme ayrıştırma, opsiyonel öğün etiketi, görünür mikro besin özetleri) ve 3 sekmeli `/nutrition` arayüzü.
 - [ ] **`v1.2.0` (`AUTH-11`) Barkod / QR & Önbellekli Ürün Arama:** `barcode` alanı, ücretsiz Open Food Facts ilk-sefer sorgusu, kişisel DB önbellekleme ve sistemde olmayan kodu besine tanımlama.
 - [ ] **`v1.3.0` (`AUTH-12`) Esnek Antrenman, Şablonlar, Kardiyo & Adım:** Kas bölgeli hazır egzersiz dataset'i, serbest egzersiz/program şablonları, set × tekrar × ağırlık + önceki antrenman hatırlatması, kardiyo ve günlük adım API'leri + güncel özet.
 - [ ] **`v1.4.0` (`AUTH-13`) Yedekleme & İçe Aktarma:** Tek dosya JSON tam yedek, doğrulamalı JSON geri yükleme (`merge` / `overwrite`) ve CSV dışa aktarma.
@@ -53,7 +53,7 @@ Fitness Tracker/
 - [ ] **`v2.0.0` (`AUTH-15`+) Yeni Nesil Frontend Tasarımı & Canlı Yayın:** Tasarım çalışması sonrası PC + mobil PWA arayüzünün (barkod/QR tarayıcı dahil) yenilenmesi, uçtan uca testler ve `v2.0.0` canlı yayını.
 
 ## 5. Çalıştırma
-- **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`
+- **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate` · `npm --prefix backend run prisma:seed`
 - **Backend geliştirme & derleme:** `npm --prefix backend run dev` · `npm --prefix backend run typecheck` · `npm --prefix backend run build`
 - **Frontend kurulum & derleme:** `npm install --prefix frontend` · `npm --prefix frontend run dev` · `npm --prefix frontend run build`
 - **Entegrasyon testleri:** `npm --prefix backend run test` · `npm --prefix frontend run test`

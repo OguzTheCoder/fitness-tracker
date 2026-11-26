@@ -10,27 +10,33 @@ export interface TrendPoint {
 export async function getStatsSummary(userId: string, days: StatsDays) {
   const { from, to } = getRollingDateRange(days);
 
-  const [latestWeight, periodWeights, periodCalories, periodWorkouts] = await Promise.all([
-    prisma.weightEntry.findFirst({
-      where: { userId },
-      orderBy: { date: 'desc' },
-      select: { date: true, weightKg: true },
-    }),
-    prisma.weightEntry.findMany({
-      where: { userId, date: { gte: from, lte: to } },
-      orderBy: { date: 'asc' },
-      select: { date: true, weightKg: true },
-    }),
-    prisma.calorieEntry.findMany({
-      where: { userId, date: { gte: from, lte: to } },
-      orderBy: { date: 'asc' },
-      select: { date: true, calories: true },
-    }),
-    prisma.workoutEntry.findMany({
-      where: { userId, date: { gte: from, lte: to } },
-      select: { durationMinutes: true },
-    }),
-  ]);
+  const [latestWeight, periodWeights, periodCalories, periodNutritionLogs, periodWorkouts] =
+    await Promise.all([
+      prisma.weightEntry.findFirst({
+        where: { userId },
+        orderBy: { date: 'desc' },
+        select: { date: true, weightKg: true },
+      }),
+      prisma.weightEntry.findMany({
+        where: { userId, date: { gte: from, lte: to } },
+        orderBy: { date: 'asc' },
+        select: { date: true, weightKg: true },
+      }),
+      prisma.calorieEntry.findMany({
+        where: { userId, date: { gte: from, lte: to } },
+        orderBy: { date: 'asc' },
+        select: { date: true, calories: true },
+      }),
+      prisma.nutritionLog.findMany({
+        where: { userId, date: { gte: from, lte: to } },
+        orderBy: { date: 'asc' },
+        select: { date: true, calories: true },
+      }),
+      prisma.workoutEntry.findMany({
+        where: { userId, date: { gte: from, lte: to } },
+        select: { durationMinutes: true },
+      }),
+    ]);
 
   const weightChangeKg =
     periodWeights.length >= 2
@@ -43,13 +49,18 @@ export async function getStatsSummary(userId: string, days: StatsDays) {
   for (const entry of periodCalories) {
     caloriesByDate.set(entry.date, (caloriesByDate.get(entry.date) ?? 0) + entry.calories);
   }
+  for (const log of periodNutritionLogs) {
+    caloriesByDate.set(log.date, (caloriesByDate.get(log.date) ?? 0) + log.calories);
+  }
 
-  const calorieTrend: TrendPoint[] = Array.from(caloriesByDate.entries()).map(([date, value]) => ({
-    date,
-    value,
-  }));
+  const calorieTrend: TrendPoint[] = Array.from(caloriesByDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, value]) => ({
+      date,
+      value: Math.round(value),
+    }));
 
-  const todayCalories = caloriesByDate.get(to) ?? 0;
+  const todayCalories = Math.round(caloriesByDate.get(to) ?? 0);
   const totalPeriodCalories = calorieTrend.reduce((sum, p) => sum + p.value, 0);
   const averageDailyCalories =
     calorieTrend.length > 0 ? Math.round(totalPeriodCalories / calorieTrend.length) : 0;

@@ -171,7 +171,7 @@ export function DashboardPage() {
           data={stats?.trends.calories ?? []}
           unit="kcal"
           accent="sky"
-          emptyMessage="Bu dönem için kalori kaydı bulunmuyor. Kalori sayfasından öğün ekleyebilirsin."
+          emptyMessage="Bu dönem için kalori kaydı bulunmuyor. Beslenme sayfasından öğün ekleyebilirsin."
         />
       </section>
 
@@ -183,9 +183,9 @@ export function DashboardPage() {
             desc: 'Günlük kilonu kaydet, tarih aralığına göre geçmişini incele.',
           },
           {
-            to: '/calories',
-            title: 'Kalori Takibi',
-            desc: 'Öğünlerini kaydet ve günlük toplam kalori alımını takip et.',
+            to: '/nutrition',
+            title: 'Beslenme & Tarifler',
+            desc: 'Besin ve tariflerle günlük kalori, makro ve mikro besinlerini takip et.',
           },
           {
             to: '/workouts',

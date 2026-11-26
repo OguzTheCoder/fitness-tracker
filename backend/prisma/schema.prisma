@@ -22,6 +22,9 @@ model User {
   weightEntries       WeightEntry[]
   calorieEntries      CalorieEntry[]
   workoutEntries      WorkoutEntry[]
+  foods               Food[]
+  recipes             Recipe[]
+  nutritionLogs       NutritionLog[]
 }
 
 model UserProfile {
@@ -87,6 +90,86 @@ model WorkoutEntry {
   note            String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([userId, date])
+}
+
+model Food {
+  id                    String         @id @default(cuid())
+  userId                String?
+  user                  User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCore                Boolean        @default(false)
+  coreKey               String?        @unique
+  name                  String
+  brand                 String?
+  category              String?
+  servingLabel          String?
+  servingGrams          Float?
+  caloriesPer100g       Float
+  proteinPer100g        Float
+  carbsPer100g          Float
+  fatPer100g            Float
+  micronutrientsPer100g String         @default("{}")
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  recipeItems           RecipeItem[]
+  nutritionLogs         NutritionLog[]
+
+  @@index([userId, name])
+  @@index([isCore, name])
+}
+
+model Recipe {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  servingsCount Float          @default(1)
+  cookedWeightG Float?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  items         RecipeItem[]
+  nutritionLogs NutritionLog[]
+
+  @@index([userId, name])
+}
+
+model RecipeItem {
+  id        String @id @default(cuid())
+  recipeId  String
+  recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  foodId    String
+  food      Food   @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  grams     Float
+  sortOrder Int    @default(0)
+
+  @@index([recipeId])
+  @@index([foodId])
+}
+
+model NutritionLog {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           String
+  mealLabel      String?
+  sourceType     String
+  foodId         String?
+  food           Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  recipeId       String?
+  recipe         Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  entryName      String
+  quantityMode   String
+  servings       Float?
+  grams          Float
+  calories       Float
+  proteinG       Float
+  carbsG         Float
+  fatG           Float
+  micronutrients String   @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([userId, date])
 }
