@@ -17,6 +17,10 @@ import {
 } from './auth.utils.js';
 
 const BCRYPT_SALT_ROUNDS = 10;
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+  'dummy-timing-equalizer-password-value',
+  BCRYPT_SALT_ROUNDS,
+);
 
 export async function registerUser(input: RegisterInput) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
@@ -41,7 +45,10 @@ export async function registerUser(input: RegisterInput) {
 
 export async function loginUser(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
-  const isPasswordValid = user ? await bcrypt.compare(input.password, user.passwordHash) : false;
+  const isPasswordValid = await bcrypt.compare(
+    input.password,
+    user ? user.passwordHash : DUMMY_PASSWORD_HASH,
+  );
 
   if (!user || !isPasswordValid) {
     throw new AppError(401, 'E-posta veya şifre hatalı.');
@@ -67,13 +74,14 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
     message: 'Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi.',
   };
 
+  const { rawToken, tokenHash } = generateResetToken();
   const user = await prisma.user.findUnique({ where: { email: input.email } });
   if (!user) {
     return genericResponse;
   }
 
-  const { rawToken, tokenHash } = generateResetToken();
   const expiresAt = new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+  const mailProvider = getMailProvider();
 
   await prisma.$transaction([
     prisma.passwordResetToken.updateMany({
@@ -90,7 +98,7 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
   ]);
 
   const resetUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/reset-password?token=${rawToken}`;
-  await getMailProvider().sendPasswordReset({
+  await mailProvider.sendPasswordReset({
     to: user.email,
     resetToken: rawToken,
     resetUrl,
@@ -102,24 +110,40 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
 
 export async function resetPassword(input: ResetPasswordInput) {
   const tokenHash = hashResetToken(input.token);
-  const record = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash },
+    select: { id: true, userId: true, usedAt: true, expiresAt: true },
+  });
 
-  if (!record || record.usedAt || record.expiresAt.getTime() < Date.now()) {
+  if (!record || record.usedAt || record.expiresAt.getTime() <= Date.now()) {
     throw new AppError(400, 'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.');
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
 
-  await prisma.$transaction([
-    prisma.user.update({
+  await prisma.$transaction(async (tx) => {
+    const now = new Date();
+    const claimed = await tx.passwordResetToken.updateMany({
+      where: {
+        id: record.id,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { usedAt: now },
+    });
+
+    if (claimed.count !== 1) {
+      throw new AppError(400, 'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.');
+    }
+
+    await tx.user.update({
       where: { id: record.userId },
-      data: { passwordHash },
-    }),
-    prisma.passwordResetToken.update({
-      where: { id: record.id },
-      data: { usedAt: new Date() },
-    }),
-  ]);
+      data: {
+        passwordHash,
+        tokenVersion: { increment: 1 },
+      },
+    });
+  });
 
   return { message: 'Şifreniz başarıyla güncellendi.' };
 }

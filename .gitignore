@@ -2,10 +2,12 @@
 AGENTS.md
 docs/INDIRMELER.md
 
-# Ortam değişkenleri ve gizli anahtarlar (Public repo güvenliği)
+# Ortam değişkenleri, sertifikalar ve gizli anahtarlar (Public repo güvenliği)
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
 # İşletim sistemi ve editör kalıntıları
 .DS_Store
@@ -23,3 +25,7 @@ coverage/
 *.db-journal
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite3-journal

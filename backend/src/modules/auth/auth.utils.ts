@@ -14,7 +14,10 @@ export interface PublicUser {
 export interface AuthUser {
   id: string;
   email: string;
+  tokenVersion: number;
 }
+
+const JWT_ALGORITHM = 'HS256' as const;
 
 export function toPublicUser(user: User): PublicUser {
   return {
@@ -25,21 +28,29 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-export function signAccessToken(user: Pick<User, 'id' | 'email'>): string {
+export function signAccessToken(user: Pick<User, 'id' | 'email' | 'tokenVersion'>): string {
   const options: SignOptions = {
+    algorithm: JWT_ALGORITHM,
     subject: user.id,
     expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
   };
-  return jwt.sign({ email: user.email }, env.JWT_SECRET, options);
+  return jwt.sign({ email: user.email, tv: user.tokenVersion }, env.JWT_SECRET, options);
 }
 
 export function verifyAccessToken(token: string): AuthUser {
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
-    if (typeof payload.sub !== 'string' || typeof payload.email !== 'string') {
+    const payload = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: [JWT_ALGORITHM],
+    }) as JwtPayload;
+    if (
+      typeof payload.sub !== 'string' ||
+      typeof payload.email !== 'string' ||
+      typeof payload.tv !== 'number' ||
+      !Number.isInteger(payload.tv)
+    ) {
       throw new AppError(401, 'Geçersiz oturum belirteci.');
     }
-    return { id: payload.sub, email: payload.email };
+    return { id: payload.sub, email: payload.email, tokenVersion: payload.tv };
   } catch (err) {
     if (err instanceof AppError) throw err;
     throw new AppError(401, 'Geçersiz veya süresi dolmuş oturum.');

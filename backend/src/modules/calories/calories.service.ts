@@ -1,6 +1,10 @@
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { buildDateFilter, type DateRangeQuery } from '../../utils/dateRange.js';
+import {
+  buildDateFilter,
+  DEFAULT_LIST_LIMIT,
+  type DateRangeQuery,
+} from '../../utils/dateRange.js';
 import type { CalorieEntryInput } from './calories.schema.js';
 
 export interface DailyCalorieTotal {
@@ -17,6 +21,8 @@ export async function listCalorieEntries(userId: string, range: DateRangeQuery) 
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+    take: range.limit ?? DEFAULT_LIST_LIMIT,
+    skip: range.offset ?? 0,
   });
 
   const totalsMap = new Map<string, DailyCalorieTotal>();

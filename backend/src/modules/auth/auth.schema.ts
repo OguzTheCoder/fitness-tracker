@@ -25,7 +25,8 @@ export const loginSchema = z.object({
   email: emailField,
   password: z
     .string({ required_error: 'Şifre zorunludur.' })
-    .min(1, 'Şifre zorunludur.'),
+    .min(1, 'Şifre zorunludur.')
+    .max(72, 'Şifre en fazla 72 karakter olabilir.'),
 });
 
 export const forgotPasswordSchema = z.object({

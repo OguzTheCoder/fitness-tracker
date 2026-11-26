@@ -1,6 +1,10 @@
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { buildDateFilter, type DateRangeQuery } from '../../utils/dateRange.js';
+import {
+  buildDateFilter,
+  DEFAULT_LIST_LIMIT,
+  type DateRangeQuery,
+} from '../../utils/dateRange.js';
 import type { WorkoutEntryInput } from './workouts.schema.js';
 
 export async function listWorkoutEntries(userId: string, range: DateRangeQuery) {
@@ -11,6 +15,8 @@ export async function listWorkoutEntries(userId: string, range: DateRangeQuery) 
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+    take: range.limit ?? DEFAULT_LIST_LIMIT,
+    skip: range.offset ?? 0,
   });
 
   const totalDurationMinutes = entries.reduce((sum, entry) => sum + entry.durationMinutes, 0);
