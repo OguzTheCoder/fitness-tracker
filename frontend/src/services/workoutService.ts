@@ -25,29 +25,26 @@ export interface WorkoutEntryPayload {
 }
 
 export const workoutService = {
-  list: (token: string, range?: DateRange) =>
+  list: (range?: DateRange) =>
     apiRequest<{ entries: WorkoutEntry[]; summary: WorkoutSummary }>(
       `/workouts${buildDateRangeQuery(range)}`,
-      { method: 'GET', token },
+      { method: 'GET' },
     ),
 
-  create: (token: string, payload: WorkoutEntryPayload) =>
+  create: (payload: WorkoutEntryPayload) =>
     apiRequest<{ entry: WorkoutEntry }>('/workouts', {
       method: 'POST',
-      token,
       body: payload,
     }),
 
-  update: (token: string, id: string, payload: WorkoutEntryPayload) =>
+  update: (id: string, payload: WorkoutEntryPayload) =>
     apiRequest<{ entry: WorkoutEntry }>(`/workouts/${id}`, {
       method: 'PUT',
-      token,
       body: payload,
     }),
 
-  remove: (token: string, id: string) =>
+  remove: (id: string) =>
     apiRequest<{ message: string }>(`/workouts/${id}`, {
       method: 'DELETE',
-      token,
     }),
 };

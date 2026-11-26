@@ -24,29 +24,26 @@ export interface CalorieEntryPayload {
 }
 
 export const calorieService = {
-  list: (token: string, range?: DateRange) =>
+  list: (range?: DateRange) =>
     apiRequest<{ entries: CalorieEntry[]; dailyTotals: DailyCalorieTotal[] }>(
       `/calories${buildDateRangeQuery(range)}`,
-      { method: 'GET', token },
+      { method: 'GET' },
     ),
 
-  create: (token: string, payload: CalorieEntryPayload) =>
+  create: (payload: CalorieEntryPayload) =>
     apiRequest<{ entry: CalorieEntry }>('/calories', {
       method: 'POST',
-      token,
       body: payload,
     }),
 
-  update: (token: string, id: string, payload: CalorieEntryPayload) =>
+  update: (id: string, payload: CalorieEntryPayload) =>
     apiRequest<{ entry: CalorieEntry }>(`/calories/${id}`, {
       method: 'PUT',
-      token,
       body: payload,
     }),
 
-  remove: (token: string, id: string) =>
+  remove: (id: string) =>
     apiRequest<{ message: string }>(`/calories/${id}`, {
       method: 'DELETE',
-      token,
     }),
 };

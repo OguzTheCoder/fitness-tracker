@@ -14,7 +14,7 @@
 
 ## 2. Mimari ve Klasör Şablonu
 - **Frontend (`frontend/`):** React + Vite + TypeScript + Tailwind CSS (Türkçe PWA, IndexedDB offline depo + senkron kuyruğu; yeni tasarım en sona bırakılır)
-- **Backend (`backend/`):** Node.js + Express + TypeScript + Zod + JWT + `bcryptjs` + güvenlik katmanı (`helmet`, rate limit)
+- **Backend (`backend/`):** Node.js + Express + TypeScript + Zod + JWT + `bcryptjs` + güvenlik katmanı (`helmet`, rate limit, `cookie-parser` `HttpOnly` çerez)
 - **Veritabanı:** Prisma ORM (v1'de SQLite; v2'de 0 TL bulut PostgreSQL + yerelde/testte uyumlu yapı)
 - **Testler:** Vitest + Supertest ve Vitest + React Testing Library
 
@@ -29,7 +29,7 @@ Fitness Tracker/
 ## 3. API Özeti
 - **v1.0.0 (`AUTH-4`..`AUTH-11`):** `/api/auth/*`, `/api/weights`, `/api/calories`, `/api/workouts`, `/api/stats/summary`
 - **v1.0.1..v2.0.0 (Eklenecek / Genişletilecek Modüller):**
-  - **Profil & Erişim (`1.0.2`):** `/api/profile` (isim, hedefler, görünür mineraller) · ortam tabanlı PIN kilidi
+  - **Profil & Erişim (`1.0.2`):** `/api/profile` (isim, hedefler, görünür mineraller) · `/api/access/*` (yerel isim / `APP_PIN` kilidi) · `/api/auth/logout*` + `HttpOnly` çerez oturumu
   - **Beslenme & Tarif (`1.1.0`):** `/api/foods` · `/api/recipes` · `/api/nutrition/logs` (snapshot'lı günlük kayıt + makro/mikro özet)
   - **Barkod / QR (`1.2.0`):** `/api/foods/barcode/:code` (önce yerel DB, yoksa Open Food Facts + özel tanımlama)
   - **Antrenman, Kardiyo & Adım (`1.3.0`):** `/api/exercises` · `/api/workout-templates` · `/api/workouts` (set/tekrar/kg + son performans) · `/api/cardio` · `/api/steps` · güncel `/api/stats/summary`
@@ -44,7 +44,7 @@ Fitness Tracker/
 
 **v1.0.1..v2.0.0 — Aşamalı SemVer Geliştirme (`main` + görev branch'i + Smart Commit + Git Tag)**
 - [x] **`v1.0.1` (`AUTH-8`) Güvenlik Sertleştirmesi & Hijyen:** `GUVENLIK.md` açıkları (`helmet`, rate limit, `tokenVersion`, JWT algoritma/secret, JSON/sayfalama sınırı, prod mail kilidi, `.gitignore` desenleri) + testler.
-- [ ] **`v1.0.2` (`AUTH-9`) Kişisel Profil & Ortam Tabanlı PIN Kilidi:** Mevcut Auth kodlarını koruyarak profil/hedef/görünür mineral ayarları, varsayılan isimle başlangıç ve canlıda tek ayarla PIN kilidi.
+- [x] **`v1.0.2` (`AUTH-9`) Kişisel Profil & Ortam Tabanlı PIN Kilidi:** Mevcut Auth kodlarını koruyarak profil/hedef/görünür mineral ayarları (`/api/profile`, `/profile`), varsayılan isimle başlangıç, canlıda `APP_PIN` ile kişisel PIN kilidi (`/api/access/*`) ve `G-005` `HttpOnly` kalıcı çerez oturumu.
 - [ ] **`v1.1.0` (`AUTH-10`) Beslenme Çekirdeği & Tarifler:** Temiz v2 beslenme şeması, temel besin dataset'i seed'i, kullanıcı besin/tarif CRUD'u, snapshot'lı günlük öğün kaydı (opsiyonel etiket) ve esnek mikro besin özetleri.
 - [ ] **`v1.2.0` (`AUTH-11`) Barkod / QR & Önbellekli Ürün Arama:** `barcode` alanı, ücretsiz Open Food Facts ilk-sefer sorgusu, kişisel DB önbellekleme ve sistemde olmayan kodu besine tanımlama.
 - [ ] **`v1.3.0` (`AUTH-12`) Esnek Antrenman, Şablonlar, Kardiyo & Adım:** Kas bölgeli hazır egzersiz dataset'i, serbest egzersiz/program şablonları, set × tekrar × ağırlık + önceki antrenman hatırlatması, kardiyo ve günlük adım API'leri + güncel özet.

@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App';
-import { TOKEN_STORAGE_KEY } from '../src/context/AuthContext';
 
 function renderApp(initialPath: string) {
   return render(
@@ -13,18 +12,24 @@ function renderApp(initialPath: string) {
   );
 }
 
-function mockFetchJson(status: number, body: unknown) {
-  return vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  );
+function jsonResponse(status: number, body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
+
+const unauthLocalStatus = {
+  mode: 'local',
+  isConfigured: false,
+  isAuthenticated: false,
+  user: null,
+};
 
 describe('Frontend Auth Flows', () => {
   it('shows client validation errors on invalid register submit', async () => {
     const user = userEvent.setup();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus));
     renderApp('/register');
 
     await user.type(screen.getByLabelText('Ad Soyad'), 'A');
@@ -39,7 +44,7 @@ describe('Frontend Auth Flows', () => {
     expect(screen.getByText('Şifreler eşleşmiyor.')).toBeInTheDocument();
   });
 
-  it('registers user, stores JWT and navigates to dashboard', async () => {
+  it('registers user with HttpOnly cookie session (no localStorage) and navigates to dashboard', async () => {
     const user = userEvent.setup();
     const mockUser = {
       id: 'u1',
@@ -48,17 +53,24 @@ describe('Frontend Auth Flows', () => {
       createdAt: new Date().toISOString(),
     };
 
-    vi.spyOn(globalThis, 'fetch')
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus))
+      .mockResolvedValueOnce(jsonResponse(201, { user: mockUser }))
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'jwt-token-1', user: mockUser }), {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: mockUser }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
+        jsonResponse(200, {
+          period: { days: 7, from: '2026-11-20', to: '2026-11-26' },
+          summary: {
+            latestWeightKg: null,
+            latestWeightDate: null,
+            weightChangeKg: null,
+            todayCalories: 0,
+            averageDailyCalories: 0,
+            calorieDaysLogged: 0,
+            workoutCount: 0,
+            workoutDurationMinutes: 0,
+          },
+          trends: { weights: [], calories: [] },
         }),
       );
 
@@ -71,15 +83,18 @@ describe('Frontend Auth Flows', () => {
     await user.click(screen.getByRole('button', { name: 'Kayıt Ol' }));
 
     expect(await screen.findByText('Hoş geldin, Oğuz Yılmaz')).toBeInTheDocument();
-    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe('jwt-token-1');
+    expect(localStorage.length).toBe(0);
+    expect(fetchSpy.mock.calls[1]?.[1]?.credentials).toBe('include');
   });
 
-  it('redirects unauthenticated users from /dashboard to /login', async () => {
+  it('redirects unauthenticated users from /dashboard to /access', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus));
     renderApp('/dashboard');
-    expect(await screen.findByRole('heading', { name: 'Giriş Yap' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Hoş Geldin' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'E-posta ile Giriş' })).toBeInTheDocument();
   });
 
-  it('shows server error on failed login and logs in + logs out on valid login', async () => {
+  it('shows server error on failed login and logs in + logs out via cookie endpoints', async () => {
     const user = userEvent.setup();
     const mockUser = {
       id: 'u1',
@@ -88,7 +103,28 @@ describe('Frontend Auth Flows', () => {
       createdAt: new Date().toISOString(),
     };
 
-    mockFetchJson(401, { error: 'E-posta veya şifre hatalı.' });
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus))
+      .mockResolvedValueOnce(jsonResponse(401, { error: 'E-posta veya şifre hatalı.' }))
+      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          period: { days: 7, from: '2026-11-20', to: '2026-11-26' },
+          summary: {
+            latestWeightKg: null,
+            latestWeightDate: null,
+            weightChangeKg: null,
+            todayCalories: 0,
+            averageDailyCalories: 0,
+            calorieDaysLogged: 0,
+            workoutCount: 0,
+            workoutDurationMinutes: 0,
+          },
+          trends: { weights: [], calories: [] },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse(200, { message: 'Oturum kapatıldı.' }));
 
     renderApp('/login');
     await user.type(screen.getByLabelText('E-posta'), 'oguz@example.com');
@@ -97,36 +133,28 @@ describe('Frontend Auth Flows', () => {
 
     expect(await screen.findByText('E-posta veya şifre hatalı.')).toBeInTheDocument();
 
-    vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'jwt-token-2', user: mockUser }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: mockUser }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      );
-
     await user.clear(screen.getByLabelText('Şifre'));
     await user.type(screen.getByLabelText('Şifre'), 'Dogru123!');
     await user.click(screen.getByRole('button', { name: 'Giriş Yap' }));
 
     expect(await screen.findByText('Hoş geldin, Oğuz')).toBeInTheDocument();
+    expect(localStorage.length).toBe(0);
 
     await user.click(screen.getByRole('button', { name: 'Çıkış Yap' }));
-    expect(await screen.findByRole('heading', { name: 'Giriş Yap' })).toBeInTheDocument();
-    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+    expect(await screen.findByRole('heading', { name: 'Hoş Geldin' })).toBeInTheDocument();
+    expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toContain('/auth/logout');
+    expect(localStorage.length).toBe(0);
   });
 
   it('submits forgot-password and resets password with URL token', async () => {
     const user = userEvent.setup();
-    mockFetchJson(200, {
-      message: 'Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi.',
-    });
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus))
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          message: 'Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi.',
+        }),
+      );
 
     renderApp('/forgot-password');
     await user.type(screen.getByLabelText('E-posta'), 'oguz@example.com');
@@ -141,7 +169,9 @@ describe('Frontend Auth Flows', () => {
 
   it('prefills token from query string and submits reset-password', async () => {
     const user = userEvent.setup();
-    mockFetchJson(200, { message: 'Şifreniz başarıyla güncellendi.' });
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse(200, unauthLocalStatus))
+      .mockResolvedValueOnce(jsonResponse(200, { message: 'Şifreniz başarıyla güncellendi.' }));
 
     renderApp('/reset-password?token=demo-reset-token');
 

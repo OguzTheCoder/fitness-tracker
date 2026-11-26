@@ -18,29 +18,25 @@ export interface WeightEntryPayload {
 }
 
 export const weightService = {
-  list: (token: string, range?: DateRange) =>
+  list: (range?: DateRange) =>
     apiRequest<{ entries: WeightEntry[] }>(`/weights${buildDateRangeQuery(range)}`, {
       method: 'GET',
-      token,
     }),
 
-  upsert: (token: string, payload: WeightEntryPayload) =>
+  upsert: (payload: WeightEntryPayload) =>
     apiRequest<{ entry: WeightEntry; updated: boolean }>('/weights', {
       method: 'POST',
-      token,
       body: payload,
     }),
 
-  update: (token: string, id: string, payload: WeightEntryPayload) =>
+  update: (id: string, payload: WeightEntryPayload) =>
     apiRequest<{ entry: WeightEntry }>(`/weights/${id}`, {
       method: 'PUT',
-      token,
       body: payload,
     }),
 
-  remove: (token: string, id: string) =>
+  remove: (id: string) =>
     apiRequest<{ message: string }>(`/weights/${id}`, {
       method: 'DELETE',
-      token,
     }),
 };

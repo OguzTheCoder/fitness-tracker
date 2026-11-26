@@ -3,13 +3,19 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App';
-import { TOKEN_STORAGE_KEY } from '../src/context/AuthContext';
 
 const mockUser = {
   id: 'u1',
   name: 'Oğuz Yılmaz',
   email: 'oguz@example.com',
   createdAt: '2026-11-25T10:00:00.000Z',
+};
+
+const authStatusOk = {
+  mode: 'local',
+  isConfigured: true,
+  isAuthenticated: true,
+  user: mockUser,
 };
 
 function jsonResponse(status: number, body: unknown) {
@@ -20,7 +26,6 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 function renderDashboard() {
-  localStorage.setItem(TOKEN_STORAGE_KEY, 'test-jwt-token');
   return render(
     <MemoryRouter initialEntries={['/dashboard']}>
       <AppRoutes />
@@ -69,7 +74,7 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(200, stats7))
       .mockResolvedValueOnce(jsonResponse(200, stats30));
 
@@ -96,7 +101,7 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
 
   it('shows clean empty states when user has no entries yet', async () => {
     vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           period: { days: 7, from: '2026-11-20', to: '2026-11-26' },
@@ -127,7 +132,7 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
 
   it('shows error banner gracefully when stats request fails', async () => {
     vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(500, { error: 'Sunucu hatası oluştu.' }));
 
     renderDashboard();

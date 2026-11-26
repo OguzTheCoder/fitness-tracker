@@ -1,51 +1,52 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   authService,
+  type AccessMode,
   type LoginPayload,
   type RegisterPayload,
+  type SetupAccessPayload,
   type User,
 } from '../services/authService';
 
-export const TOKEN_STORAGE_KEY = 'ft_auth_token';
-
 interface AuthContextValue {
   user: User | null;
-  token: string | null;
+  accessMode: AccessMode;
+  isConfigured: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
+  setupAccess: (payload: SetupAccessPayload) => Promise<User>;
+  unlockWithPin: (pin: string) => Promise<User>;
+  resumeLocalSession: () => Promise<User>;
   login: (payload: LoginPayload) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
+  syncUserName: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(localStorage.getItem(TOKEN_STORAGE_KEY)));
+  const [accessMode, setAccessMode] = useState<AccessMode>('local');
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) {
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
     let cancelled = false;
     setIsLoading(true);
 
     authService
-      .me(token)
-      .then((res) => {
-        if (!cancelled) setUser(res.user);
+      .getAccessStatus()
+      .then((status) => {
+        if (cancelled) return;
+        setAccessMode(status.mode);
+        setIsConfigured(status.isConfigured);
+        setUser(status.isAuthenticated ? status.user : null);
       })
       .catch(() => {
-        if (!cancelled) {
-          localStorage.removeItem(TOKEN_STORAGE_KEY);
-          setToken(null);
-          setUser(null);
-        }
+        if (cancelled) return;
+        setUser(null);
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -54,47 +55,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
-
-  const applySession = useCallback((nextToken: string, nextUser: User) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, nextToken);
-    setToken(nextToken);
-    setUser(nextUser);
-    return nextUser;
   }, []);
 
-  const login = useCallback(
-    async (payload: LoginPayload) => {
-      const res = await authService.login(payload);
-      return applySession(res.token, res.user);
-    },
-    [applySession],
-  );
+  const setupAccess = useCallback(async (payload: SetupAccessPayload) => {
+    const res = await authService.setupAccess(payload);
+    setAccessMode(res.mode);
+    setIsConfigured(true);
+    setUser(res.user);
+    return res.user;
+  }, []);
 
-  const register = useCallback(
-    async (payload: RegisterPayload) => {
-      const res = await authService.register(payload);
-      return applySession(res.token, res.user);
-    },
-    [applySession],
-  );
+  const unlockWithPin = useCallback(async (pin: string) => {
+    const res = await authService.unlockWithPin(pin);
+    setAccessMode(res.mode);
+    setIsConfigured(true);
+    setUser(res.user);
+    return res.user;
+  }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    setToken(null);
+  const resumeLocalSession = useCallback(async () => {
+    const res = await authService.resumeLocalSession();
+    setAccessMode(res.mode);
+    setIsConfigured(true);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
+  const login = useCallback(async (payload: LoginPayload) => {
+    const res = await authService.login(payload);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const res = await authService.register(payload);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Cookie clearing failure should still clear local React session state.
+    } finally {
+      setUser(null);
+    }
+  }, []);
+
+  const logoutAll = useCallback(async () => {
+    await authService.logoutAll();
     setUser(null);
+  }, []);
+
+  const syncUserName = useCallback((name: string) => {
+    setUser((prev) => (prev ? { ...prev, name } : prev));
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
+        accessMode,
+        isConfigured,
         isLoading,
-        isAuthenticated: Boolean(user && token),
+        isAuthenticated: Boolean(user),
+        setupAccess,
+        unlockWithPin,
+        resumeLocalSession,
         login,
         register,
         logout,
+        logoutAll,
+        syncUserName,
       }}
     >
       {children}

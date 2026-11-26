@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { FormField } from '../components/FormField';
-import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
 import { weightService, type WeightEntry } from '../services/weightService';
 import { formatTurkishDate, getTodayIsoDate, type DateRange } from '../utils/date';
@@ -30,7 +29,6 @@ function validateWeightForm(date: string, weightText: string, note: string): For
 }
 
 export function WeightsPage() {
-  const { token } = useAuth();
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [range, setRange] = useState<DateRange>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -46,22 +44,18 @@ export function WeightsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadEntries = useCallback(
-    async (activeRange: DateRange) => {
-      if (!token) return;
-      setIsLoading(true);
-      setListError(null);
-      try {
-        const res = await weightService.list(token, activeRange);
-        setEntries(res.entries);
-      } catch (err) {
-        setListError(err instanceof ApiError ? err.message : 'Kilo kayıtları yüklenemedi.');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [token],
-  );
+  const loadEntries = useCallback(async (activeRange: DateRange) => {
+    setIsLoading(true);
+    setListError(null);
+    try {
+      const res = await weightService.list(activeRange);
+      setEntries(res.entries);
+    } catch (err) {
+      setListError(err instanceof ApiError ? err.message : 'Kilo kayıtları yüklenemedi.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadEntries(range);
@@ -88,7 +82,6 @@ export function WeightsPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!token) return;
 
     const errors = validateWeightForm(date, weightKg, note);
     setFieldErrors(errors);
@@ -105,10 +98,10 @@ export function WeightsPage() {
       };
 
       if (editingId) {
-        await weightService.update(token, editingId, payload);
+        await weightService.update(editingId, payload);
         setFeedback('Kilo kaydı güncellendi.');
       } else {
-        const res = await weightService.upsert(token, payload);
+        const res = await weightService.upsert(payload);
         setFeedback(res.updated ? 'Bu tarihteki kilo kaydı güncellendi.' : 'Kilo kaydı eklendi.');
       }
 
@@ -133,12 +126,11 @@ export function WeightsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!token) return;
     setDeletingId(id);
     setFormError(null);
     setFeedback(null);
     try {
-      await weightService.remove(token, id);
+      await weightService.remove(id);
       if (editingId === id) resetForm();
       setFeedback('Kilo kaydı silindi.');
       await loadEntries(range);
