@@ -3,13 +3,13 @@
 > **Kurallar:** Projenin giriş noktasıdır; **her adımdan sonra güncellenir**. Yalnızca güncel durum ve sıradaki 1–3 adım tutulur; eski işler burada biriktirilmez (biten yapılar [TAMAMLANANLAR.md](./TAMAMLANANLAR.md) içine gider).
 
 ## Neredeyiz?
-- **Faz / Sürüm:** `v1.2.0` (`AUTH-11` — Barkod / QR & Önbellekli Ürün Arama) kodlama ve doğrulama tamamlandı (Backend 48/48, Frontend 34/34 test ve her iki `build` 0 hatayla geçti).
-- **Aktif Branch:** `AUTH-11-barcode-qr-lookup`
-- **Son Adım:** `Food.barcode` kullanıcı izolasyonlu migration, hız sınırlı ve SSRF korumalı `GET /api/foods/barcode/:code` + soyutlanmış Open Food Facts ilk-sefer önbellekleme, `/api/foods` barkod desteği ve `/nutrition` içi kamera (`BarcodeDetector` + `@zxing/browser`) / elle okuma + tek tıkla ekleme / özel besin tanımlama akışı tamamlandı.
+- **Faz / Sürüm:** `v1.3.0` (`AUTH-12` — Esnek Antrenman, Şablonlar, Kardiyo & Adım) kodlama ve doğrulama tamamlandı (Backend 52/52, Frontend 34/34 test ve her iki `build` 0 hatayla geçti).
+- **Aktif Branch:** `AUTH-12-workouts-cardio-steps`
+- **Son Adım:** `Exercise`, `WorkoutTemplate`, `WorkoutTemplateExercise`, `WorkoutExercise`, `WorkoutSet`, `CardioEntry` ve `StepEntry` migration'ı, 46 kas bölgeli hazır egzersiz seed'i, `/api/exercises`, `/api/workout-templates`, v2 set/tekrar/ağırlık + önceki performans hatırlatmalı `/api/workouts`, beslenmeden bağımsız `/api/cardio`, profil hedefli günlük upsert `/api/steps`, güncel `/api/stats/summary` ve 4 sekmeli `/workouts` + `/dashboard` arayüzü tamamlandı.
 
 ## Sırada Ne Var?
-1. `AUTH-11-barcode-qr-lookup` dalını Smart Commit ile gönderip PR üzerinden `main`'e merge etmek ve `v1.2.0` etiketini oluşturmak.
-2. `main` üzerinden `AUTH-12` dalını açıp `v1.3.0` — Esnek Antrenman, Şablonlar, Kardiyo & Adım adımına geçmek.
+1. `AUTH-12-workouts-cardio-steps` dalını Smart Commit ile gönderip PR üzerinden `main`'e merge etmek ve `v1.3.0` etiketini oluşturmak.
+2. `main` üzerinden `AUTH-13` dalını açıp `v1.4.0` — Yedekleme & İçe Aktarma (`JSON` tam yedek/geri yükleme + `CSV` dışa aktarma) adımına geçmek.
 3. *(Paralel/isteğe bağlı)* `v2.0.0` Frontend fazı için görsel tasarım tercihlerini biriktirmeye devam etmek.
 
 ## Ayrıntı Nerede?

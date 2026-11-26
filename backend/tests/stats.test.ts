@@ -21,9 +21,15 @@ function isoDaysAgo(daysAgo: number): string {
 
 describe('Stats Summary & Faz 2 E2E Integration (/api/stats/summary)', () => {
   beforeEach(async () => {
+    await prisma.workoutSet.deleteMany();
+    await prisma.workoutExercise.deleteMany();
     await prisma.workoutEntry.deleteMany();
+    await prisma.cardioEntry.deleteMany();
+    await prisma.stepEntry.deleteMany();
     await prisma.calorieEntry.deleteMany();
+    await prisma.nutritionLog.deleteMany();
     await prisma.weightEntry.deleteMany();
+    await prisma.userProfile.deleteMany();
     await prisma.passwordResetToken.deleteMany();
     await prisma.user.deleteMany();
   });
@@ -60,8 +66,16 @@ describe('Stats Summary & Faz 2 E2E Integration (/api/stats/summary)', () => {
       calorieDaysLogged: 0,
       workoutCount: 0,
       workoutDurationMinutes: 0,
+      cardioCount: 0,
+      cardioDurationMinutes: 0,
+      cardioDistanceKm: 0,
+      cardioCaloriesBurned: 0,
+      todaySteps: 0,
+      dailyStepGoal: 8000,
+      averageDailySteps: 0,
+      stepDaysLogged: 0,
     });
-    expect(res.body.trends).toEqual({ weights: [], calories: [] });
+    expect(res.body.trends).toEqual({ weights: [], calories: [], steps: [] });
   });
 
   it('aggregates full Faz 2 user flow across 7d and 30d windows with strict user isolation', async () => {
@@ -144,6 +158,14 @@ describe('Stats Summary & Faz 2 E2E Integration (/api/stats/summary)', () => {
       calorieDaysLogged: 2,
       workoutCount: 2,
       workoutDurationMinutes: 75,
+      cardioCount: 0,
+      cardioDurationMinutes: 0,
+      cardioDistanceKm: 0,
+      cardioCaloriesBurned: 0,
+      todaySteps: 0,
+      dailyStepGoal: 8000,
+      averageDailySteps: 0,
+      stepDaysLogged: 0,
     });
     expect(res7.body.trends.weights).toEqual([
       { date: twoDaysAgo, value: 79.5 },
@@ -169,6 +191,14 @@ describe('Stats Summary & Faz 2 E2E Integration (/api/stats/summary)', () => {
       calorieDaysLogged: 3,
       workoutCount: 3,
       workoutDurationMinutes: 135,
+      cardioCount: 0,
+      cardioDurationMinutes: 0,
+      cardioDistanceKm: 0,
+      cardioCaloriesBurned: 0,
+      todaySteps: 0,
+      dailyStepGoal: 8000,
+      averageDailySteps: 0,
+      stepDaysLogged: 0,
     });
     expect(res30.body.trends.weights).toHaveLength(3);
     expect(res30.body.trends.calories).toHaveLength(3);

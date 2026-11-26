@@ -33,8 +33,8 @@ function renderDashboard() {
   );
 }
 
-describe('Frontend Stats Dashboard (AUTH-11)', () => {
-  it('renders 4 summary cards, both SVG trend charts, and switches 7/30/90 day periods', async () => {
+describe('Frontend Stats Dashboard (AUTH-12)', () => {
+  it('renders summary cards including cardio & steps, SVG trend charts, and switches 7/30/90 day periods', async () => {
     const user = userEvent.setup();
 
     const stats7 = {
@@ -48,6 +48,14 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
         calorieDaysLogged: 2,
         workoutCount: 3,
         workoutDurationMinutes: 135,
+        cardioCount: 2,
+        cardioDurationMinutes: 65,
+        cardioDistanceKm: 9.2,
+        cardioCaloriesBurned: 520,
+        todaySteps: 9400,
+        dailyStepGoal: 8000,
+        averageDailySteps: 8600,
+        stepDaysLogged: 2,
       },
       trends: {
         weights: [
@@ -57,6 +65,10 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
         calories: [
           { date: '2026-11-24', value: 1800 },
           { date: '2026-11-26', value: 1200 },
+        ],
+        steps: [
+          { date: '2026-11-25', value: 7800 },
+          { date: '2026-11-26', value: 9400 },
         ],
       },
     };
@@ -69,6 +81,8 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
         weightChangeKg: -2.5,
         workoutCount: 11,
         workoutDurationMinutes: 510,
+        cardioCount: 7,
+        cardioDurationMinutes: 240,
       },
     };
 
@@ -83,14 +97,19 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
     expect(await screen.findByText('78.5 kg')).toBeInTheDocument();
     expect(screen.getByText('1200 kcal')).toBeInTheDocument();
     expect(screen.getByText('135 dk')).toBeInTheDocument();
+    expect(screen.getByText('65 dk')).toBeInTheDocument();
+    expect(screen.getByText(/2 seans · 9.2 km/i)).toBeInTheDocument();
+    expect(screen.getByText(/%118/i)).toBeInTheDocument();
     expect(screen.getByText(/Dönem değişimi: -1 kg/i)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Kilo Trendi grafiği' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Günlük Kalori Trendi grafiği' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Günlük Adım Trendi grafiği' })).toBeInTheDocument();
 
     // Switch to 30 days
     await user.click(screen.getByRole('button', { name: 'Son 30 Gün' }));
 
     expect(await screen.findByText('510 dk')).toBeInTheDocument();
+    expect(screen.getByText('240 dk')).toBeInTheDocument();
     expect(screen.getByText(/Dönem değişimi: -2.5 kg/i)).toBeInTheDocument();
 
     await waitFor(() => {
@@ -114,20 +133,24 @@ describe('Frontend Stats Dashboard (AUTH-11)', () => {
             calorieDaysLogged: 0,
             workoutCount: 0,
             workoutDurationMinutes: 0,
+            cardioCount: 0,
+            cardioDurationMinutes: 0,
+            cardioDistanceKm: 0,
+            cardioCaloriesBurned: 0,
+            todaySteps: 0,
+            dailyStepGoal: 8000,
+            averageDailySteps: 0,
+            stepDaysLogged: 0,
           },
-          trends: { weights: [], calories: [] },
+          trends: { weights: [], calories: [], steps: [] },
         }),
       );
 
     renderDashboard();
 
     expect(await screen.findByText('Kayıt yok')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Bu dönem için kilo ölçümü bulunmuyor/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Bu dönem için kalori kaydı bulunmuyor/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Bu dönem için kilo ölçümü bulunmuyor/i)).toBeInTheDocument();
+    expect(screen.getByText(/Bu dönem için kalori kaydı bulunmuyor/i)).toBeInTheDocument();
   });
 
   it('shows error banner gracefully when stats request fails', async () => {

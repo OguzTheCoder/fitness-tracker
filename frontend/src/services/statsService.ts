@@ -22,10 +22,19 @@ export interface StatsSummaryResponse {
     calorieDaysLogged: number;
     workoutCount: number;
     workoutDurationMinutes: number;
+    cardioCount?: number;
+    cardioDurationMinutes?: number;
+    cardioDistanceKm?: number;
+    cardioCaloriesBurned?: number;
+    todaySteps?: number;
+    dailyStepGoal?: number;
+    averageDailySteps?: number;
+    stepDaysLogged?: number;
   };
   trends: {
     weights: TrendPoint[];
     calories: TrendPoint[];
+    steps?: TrendPoint[];
   };
 }
 
