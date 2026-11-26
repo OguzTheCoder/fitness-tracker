@@ -33,6 +33,17 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  if (typeof err === 'object' && err !== null && 'type' in err) {
+    if (err.type === 'entity.too.large') {
+      res.status(413).json({ error: 'İstek gövdesi izin verilen sınırı (16 KB) aşıyor.' });
+      return;
+    }
+    if (err.type === 'entity.parse.failed') {
+      res.status(400).json({ error: 'Geçersiz JSON biçimi.' });
+      return;
+    }
+  }
+
   if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002') {
     res.status(409).json({ error: 'Bu kayıt zaten mevcut.' });
     return;

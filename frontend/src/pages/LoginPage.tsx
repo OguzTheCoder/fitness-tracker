@@ -4,6 +4,7 @@ import { AuthLayout } from '../components/AuthLayout';
 import { FormField } from '../components/FormField';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
+import { resolveSafeRedirectPath } from '../utils/security';
 
 interface LoginErrors {
   email?: string;
@@ -14,7 +15,9 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/dashboard';
+  const redirectTo = resolveSafeRedirectPath(
+    (location.state as { from?: { pathname?: unknown } } | null)?.from?.pathname,
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

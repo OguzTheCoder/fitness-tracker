@@ -8,7 +8,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       DATABASE_URL: 'file:./test.db',
-      JWT_SECRET: 'test-jwt-secret-key-at-least-16-chars',
+      JWT_SECRET: 'test-jwt-secret-key-at-least-32-characters-long',
       JWT_EXPIRES_IN: '1h',
       CORS_ORIGIN: 'http://localhost:5173',
       FRONTEND_URL: 'http://localhost:5173',

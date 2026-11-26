@@ -18,10 +18,24 @@ export const isoDateSchema = z
   .trim()
   .refine(isValidIsoDate, 'Geçerli bir tarih giriniz (YYYY-AA-GG).');
 
+export const DEFAULT_LIST_LIMIT = 100;
+export const MAX_LIST_LIMIT = 366;
+
 export const dateRangeQuerySchema = z
   .object({
     from: isoDateSchema.optional(),
     to: isoDateSchema.optional(),
+    limit: z.coerce
+      .number({ invalid_type_error: 'Kayıt sınırı sayısal olmalıdır.' })
+      .int('Kayıt sınırı tam sayı olmalıdır.')
+      .min(1, 'Kayıt sınırı en az 1 olmalıdır.')
+      .max(MAX_LIST_LIMIT, `Kayıt sınırı en fazla ${MAX_LIST_LIMIT} olabilir.`)
+      .default(DEFAULT_LIST_LIMIT),
+    offset: z.coerce
+      .number({ invalid_type_error: 'Başlangıç kaydı sayısal olmalıdır.' })
+      .int('Başlangıç kaydı tam sayı olmalıdır.')
+      .min(0, 'Başlangıç kaydı negatif olamaz.')
+      .default(0),
   })
   .refine((data) => !data.from || !data.to || data.from <= data.to, {
     message: 'Başlangıç tarihi bitiş tarihinden büyük olamaz.',

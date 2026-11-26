@@ -1,6 +1,10 @@
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../middlewares/errorHandler.js';
-import { buildDateFilter, type DateRangeQuery } from '../../utils/dateRange.js';
+import {
+  buildDateFilter,
+  DEFAULT_LIST_LIMIT,
+  type DateRangeQuery,
+} from '../../utils/dateRange.js';
 import type { WeightEntryInput } from './weights.schema.js';
 
 function isUniqueConstraintError(err: unknown): boolean {
@@ -15,6 +19,8 @@ export async function listWeightEntries(userId: string, range: DateRangeQuery) {
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     orderBy: { date: 'desc' },
+    take: range.limit ?? DEFAULT_LIST_LIMIT,
+    skip: range.offset ?? 0,
   });
 
   return { entries };
