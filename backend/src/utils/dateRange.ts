@@ -37,3 +37,22 @@ export function buildDateFilter(range: DateRangeQuery): { gte?: string; lte?: st
     ...(range.to ? { lte: range.to } : {}),
   };
 }
+
+export function formatIsoDateUtc(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getRollingDateRange(days: number, referenceDate = new Date()): { from: string; to: string } {
+  const end = new Date(
+    Date.UTC(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate()),
+  );
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  return {
+    from: formatIsoDateUtc(start),
+    to: formatIsoDateUtc(end),
+  };
+}

@@ -17,3 +17,4 @@
 | 2026-11-26 | `AUTH-8` | Günlük Kilo Takibi: `WeightEntry` şeması + migration, ortak `dateRange`, `/api/weights` CRUD/upsert API, ortak `AppLayout` + `DateRangeFilter`, `/weights` UI ve testler. | Backend 15/15, Frontend 10/10 test ve her iki `build` geçti. |
 | 2026-11-26 | `AUTH-9` | Manuel Kalori Takibi: `CalorieEntry` şeması + migration, `/api/calories` CRUD + `dailyTotals` API, `/calories` günlük gruplu UI ve testler. | Backend 19/19, Frontend 14/14 test ve her iki `build` geçti. |
 | 2026-11-26 | `AUTH-10` | Antrenman Kaydı: `WorkoutEntry` şeması + migration, `/api/workouts` CRUD + `summary` API, `/workouts` UI ve testler. | Backend 23/23, Frontend 18/18 test ve her iki `build` geçti. |
+| 2026-11-26 | `AUTH-11` | Basit İstatistik Paneli & Faz 2 Testleri: `GET /api/stats/summary?days=7\|30\|90`, sıfır bağımlılıklı SVG `TrendChart`, 4 özet kart + 2 grafikli `DashboardPage` ve Faz 2 E2E testleri. | Backend 26/26, Frontend 21/21 test ve her iki `build` geçti. |
