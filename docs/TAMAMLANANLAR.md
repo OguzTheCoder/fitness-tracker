@@ -14,3 +14,4 @@
 | 2026-11-25 | `AUTH-2` | `AuthContext` (JWT + `/api/auth/me` doğrulama + çıkış), `ProtectedRoute`, `LoginPage` ve korumalı `DashboardPage`. | `tsc -b && vite build` 0 hatayla geçti. |
 | 2026-11-25 | `AUTH-3` | `ForgotPasswordPage` ve `ResetPasswordPage` (`?token=` desteği + doğrulama) ve `/forgot-password`, `/reset-password` rotaları. | `tsc -b && vite build` 0 hatayla geçti. |
 | 2026-11-25 | `AUTH-7` | Backend (Vitest + Supertest + izole SQLite `test.db`) ve Frontend (Vitest + React Testing Library) entegrasyon test paketi. | Backend 10/10, Frontend 6/6 test ve her iki `build` geçti. |
+| 2026-11-26 | `AUTH-8` | Günlük Kilo Takibi: `WeightEntry` şeması + migration, ortak `dateRange`, `/api/weights` CRUD/upsert API, ortak `AppLayout` + `DateRangeFilter`, `/weights` UI ve testler. | Backend 15/15, Frontend 10/10 test ve her iki `build` geçti. |

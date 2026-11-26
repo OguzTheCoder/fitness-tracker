@@ -5,7 +5,7 @@
 
 ## 1. Kapsam Sınırı
 - **Faz 1 (Zorunlu Teslim — `AUTH-1`..`AUTH-7`):** Kayıt, giriş, token tabanlı şifre sıfırlama ve entegrasyon testleri.
-- **Faz 2 (Fitness Tracker MVP — `AUTH-8`+):** Günlük kilo (tarih, kg, not), manuel kalori (tarih, öğün, kcal), antrenman kaydı (tarih, ad, süre, not), basit istatistik paneli (özet kartlar + trend grafiği).
+- **Faz 2 (Fitness Tracker MVP — `AUTH-8`..`AUTH-11`):** Ortak üst menülü ayrı sayfalar (`/dashboard`, `/weights`, `/calories`, `/workouts`), `YYYY-MM-DD` tarihli + `from`/`to` filtreli kayıtlar: günlük kilo (aynı gün upsert, `kg`, `not`), manuel kalori (serbest `öğün`, `kcal`, günlük toplam), antrenman (`ad`, `süre dk`, `not`), basit istatistik paneli (7/30/90 gün özet kartları + sıfır bağımlılıklı SVG kilo & kalori trend grafikleri).
 - **Kapsam Dışı:** Dış yemek/barkod API, giyilebilir cihaz, admin/rol, sosyal özellik, makro/hedef hesabı, çoklu dil, mobil native.
 
 ## 2. Mimari ve Klasör Şablonu
@@ -23,12 +23,13 @@ Fitness Tracker/
 └── frontend/             # src/{components,context,pages,services,App.tsx}, tests/
 ```
 
-## 3. Faz 1 API Özeti
-- `POST /api/auth/register` (`AUTH-4`) — Kullanıcı kaydı → JWT + profil
-- `POST /api/auth/login` (`AUTH-5`) — Giriş → JWT + profil
-- `GET /api/auth/me` (`AUTH-5`) — Aktif kullanıcı bilgisi (Bearer JWT)
-- `POST /api/auth/forgot-password` (`AUTH-6`) — Süreli sıfırlama token'ı + `MailProvider`
-- `POST /api/auth/reset-password` (`AUTH-6`) — Token doğrulama + yeni şifre
+## 3. API Özeti
+- **Faz 1 (`AUTH-4`..`AUTH-6`):** `POST /api/auth/register` · `POST /api/auth/login` · `GET /api/auth/me` · `POST /api/auth/forgot-password` · `POST /api/auth/reset-password`
+- **Faz 2 (`AUTH-8`..`AUTH-11`, tümü Bearer JWT):**
+  - `GET/POST /api/weights` (opsiyonel `?from&to`, `POST` aynı güne upsert) · `PUT/DELETE /api/weights/:id` (`AUTH-8`)
+  - `GET/POST /api/calories` (opsiyonel `?from&to`) · `PUT/DELETE /api/calories/:id` (`AUTH-9`)
+  - `GET/POST /api/workouts` (opsiyonel `?from&to`) · `PUT/DELETE /api/workouts/:id` (`AUTH-10`)
+  - `GET /api/stats/summary?days=7|30|90` (`AUTH-11`)
 
 ## 4. Yol Haritası
 **Faz 0 — Kurulum**
@@ -44,7 +45,8 @@ Fitness Tracker/
 - [x] `AUTH-7` Backend + Frontend entegrasyon testleri
 
 **Faz 2 — Fitness Tracker MVP (Faz 1 `Done` sonrası)**
-- [ ] `AUTH-8` Günlük Kilo Takibi · `AUTH-9` Manuel Kalori · `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Testler
+- [x] `AUTH-8` Günlük Kilo Takibi (`WeightEntry`, `/api/weights`, `AppLayout`, `/weights` + testler)
+- [ ] `AUTH-9` Manuel Kalori Takibi · `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Faz 2 Testleri
 
 ## 5. Çalıştırma
 - **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`

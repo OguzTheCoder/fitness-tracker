@@ -17,3 +17,5 @@
 | K-011 | 2026-11-25 | Faz 2 Kapsamı | **Dahil:** Kilo, manuel kalori, antrenman kaydı, basit istatistik paneli. **Hariç:** Dış yemek API, giyilebilir, admin, sosyal, makro/hedef, çoklu dil, mobil. | Aktif |
 | K-012 | 2026-11-25 | Arayüz & Stil | Türkçe arayüz + Tailwind CSS. | Aktif |
 | K-013 | 2026-11-25 | Doküman Sadeliği | Tüm `docs/*.md` dosyaları kısa, tekrar içermeyen ve tablo/madde odaklı tutulur; `TAMAMLANANLAR.md`'ye yalnızca tamamlanan uygulama yapıları yazılır. | Aktif |
+| K-014 | 2026-11-25 | Faz 2 Arayüz & Grafik | Ortak üst menülü (`AppLayout`) ayrı sayfalar (`/dashboard`, `/weights`, `/calories`, `/workouts`) ve sıfır bağımlılıklı responsive SVG trend grafiği. | Aktif |
+| K-015 | 2026-11-25 | Faz 2 Veri & API | Tarihler `YYYY-MM-DD` (opsiyonel `from`/`to` filtreli); kiloda aynı güne upsert (`@@unique([userId, date])`); kaloride serbest öğün + günlük toplam; antrenmanda tarih/ad/süre/not; panelde 7/30/90 gün özet + kilo/kalori trendi. | Aktif |
