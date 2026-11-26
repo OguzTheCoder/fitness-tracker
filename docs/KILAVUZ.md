@@ -46,7 +46,8 @@ Fitness Tracker/
 
 **Faz 2 — Fitness Tracker MVP (Faz 1 `Done` sonrası)**
 - [x] `AUTH-8` Günlük Kilo Takibi (`WeightEntry`, `/api/weights`, `AppLayout`, `/weights` + testler)
-- [ ] `AUTH-9` Manuel Kalori Takibi · `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Faz 2 Testleri
+- [x] `AUTH-9` Manuel Kalori Takibi (`CalorieEntry`, `/api/calories`, `/calories` + günlük toplam + testler)
+- [ ] `AUTH-10` Antrenman Kaydı · `AUTH-11` İstatistik Paneli + Faz 2 Testleri
 
 ## 5. Çalıştırma
 - **Backend kurulum & migration:** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate`
