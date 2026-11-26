@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { FormField } from '../components/FormField';
-import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
 import {
   workoutService,
@@ -46,7 +45,6 @@ function validateWorkoutForm(
 }
 
 export function WorkoutsPage() {
-  const { token } = useAuth();
   const [entries, setEntries] = useState<WorkoutEntry[]>([]);
   const [summary, setSummary] = useState<WorkoutSummary>({
     totalCount: 0,
@@ -67,23 +65,19 @@ export function WorkoutsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadEntries = useCallback(
-    async (activeRange: DateRange) => {
-      if (!token) return;
-      setIsLoading(true);
-      setListError(null);
-      try {
-        const res = await workoutService.list(token, activeRange);
-        setEntries(res.entries);
-        setSummary(res.summary);
-      } catch (err) {
-        setListError(err instanceof ApiError ? err.message : 'Antrenman kayıtları yüklenemedi.');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [token],
-  );
+  const loadEntries = useCallback(async (activeRange: DateRange) => {
+    setIsLoading(true);
+    setListError(null);
+    try {
+      const res = await workoutService.list(activeRange);
+      setEntries(res.entries);
+      setSummary(res.summary);
+    } catch (err) {
+      setListError(err instanceof ApiError ? err.message : 'Antrenman kayıtları yüklenemedi.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadEntries(range);
@@ -112,7 +106,6 @@ export function WorkoutsPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!token) return;
 
     const errors = validateWorkoutForm(date, name, durationMinutes, note);
     setFieldErrors(errors);
@@ -130,10 +123,10 @@ export function WorkoutsPage() {
       };
 
       if (editingId) {
-        await workoutService.update(token, editingId, payload);
+        await workoutService.update(editingId, payload);
         setFeedback('Antrenman kaydı güncellendi.');
       } else {
-        await workoutService.create(token, payload);
+        await workoutService.create(payload);
         setFeedback('Antrenman kaydı eklendi.');
       }
 
@@ -159,12 +152,11 @@ export function WorkoutsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!token) return;
     setDeletingId(id);
     setFormError(null);
     setFeedback(null);
     try {
-      await workoutService.remove(token, id);
+      await workoutService.remove(id);
       if (editingId === id) resetForm();
       setFeedback('Antrenman kaydı silindi.');
       await loadEntries(range);

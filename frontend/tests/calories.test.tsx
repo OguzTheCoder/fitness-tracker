@@ -3,13 +3,26 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App';
-import { TOKEN_STORAGE_KEY } from '../src/context/AuthContext';
 
 const mockUser = {
   id: 'u1',
   name: 'Oğuz Yılmaz',
   email: 'oguz@example.com',
   createdAt: '2026-11-25T10:00:00.000Z',
+};
+
+const authStatusOk = {
+  mode: 'local',
+  isConfigured: true,
+  isAuthenticated: true,
+  user: mockUser,
+};
+
+const unauthStatus = {
+  mode: 'local',
+  isConfigured: false,
+  isAuthenticated: false,
+  user: null,
 };
 
 function jsonResponse(status: number, body: unknown) {
@@ -19,10 +32,7 @@ function jsonResponse(status: number, body: unknown) {
   });
 }
 
-function renderCalories(authenticated = true) {
-  if (authenticated) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-jwt-token');
-  }
+function renderCalories() {
   return render(
     <MemoryRouter initialEntries={['/calories']}>
       <AppRoutes />
@@ -31,9 +41,10 @@ function renderCalories(authenticated = true) {
 }
 
 describe('Frontend Calories Page (AUTH-9)', () => {
-  it('redirects unauthenticated users from /calories to /login', async () => {
-    renderCalories(false);
-    expect(await screen.findByRole('heading', { name: 'Giriş Yap' })).toBeInTheDocument();
+  it('redirects unauthenticated users from /calories to /access', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse(200, unauthStatus));
+    renderCalories();
+    expect(await screen.findByRole('heading', { name: 'Hoş Geldin' })).toBeInTheDocument();
   });
 
   it('shows daily grouped totals, validates form, and creates a new meal entry', async () => {
@@ -70,7 +81,7 @@ describe('Frontend Calories Page (AUTH-9)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           entries: initialEntries,
@@ -85,7 +96,7 @@ describe('Frontend Calories Page (AUTH-9)', () => {
         }),
       );
 
-    renderCalories(true);
+    renderCalories();
 
     expect(await screen.findByText('Günlük Toplam: 830 kcal')).toBeInTheDocument();
     expect(screen.getByText('Kahvaltı - 2 yumurta')).toBeInTheDocument();
@@ -125,7 +136,7 @@ describe('Frontend Calories Page (AUTH-9)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           entries: [entry],
@@ -142,7 +153,7 @@ describe('Frontend Calories Page (AUTH-9)', () => {
       .mockResolvedValueOnce(jsonResponse(200, { message: 'Kalori kaydı silindi.' }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [], dailyTotals: [] }));
 
-    renderCalories(true);
+    renderCalories();
     expect(await screen.findByText('Ara öğün - Elma')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Düzenle' }));
@@ -173,11 +184,11 @@ describe('Frontend Calories Page (AUTH-9)', () => {
     const user = userEvent.setup();
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [], dailyTotals: [] }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [], dailyTotals: [] }));
 
-    renderCalories(true);
+    renderCalories();
     await screen.findByText(/Henüz kalori kaydı eklenmemiş/i);
 
     await user.type(screen.getByLabelText('Başlangıç Tarihi'), '2026-11-20');

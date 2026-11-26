@@ -3,13 +3,26 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App';
-import { TOKEN_STORAGE_KEY } from '../src/context/AuthContext';
 
 const mockUser = {
   id: 'u1',
   name: 'Oğuz Yılmaz',
   email: 'oguz@example.com',
   createdAt: '2026-11-25T10:00:00.000Z',
+};
+
+const authStatusOk = {
+  mode: 'local',
+  isConfigured: true,
+  isAuthenticated: true,
+  user: mockUser,
+};
+
+const unauthStatus = {
+  mode: 'local',
+  isConfigured: false,
+  isAuthenticated: false,
+  user: null,
 };
 
 function jsonResponse(status: number, body: unknown) {
@@ -19,10 +32,7 @@ function jsonResponse(status: number, body: unknown) {
   });
 }
 
-function renderWorkouts(authenticated = true) {
-  if (authenticated) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-jwt-token');
-  }
+function renderWorkouts() {
   return render(
     <MemoryRouter initialEntries={['/workouts']}>
       <AppRoutes />
@@ -31,9 +41,10 @@ function renderWorkouts(authenticated = true) {
 }
 
 describe('Frontend Workouts Page (AUTH-10)', () => {
-  it('redirects unauthenticated users from /workouts to /login', async () => {
-    renderWorkouts(false);
-    expect(await screen.findByRole('heading', { name: 'Giriş Yap' })).toBeInTheDocument();
+  it('redirects unauthenticated users from /workouts to /access', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse(200, unauthStatus));
+    renderWorkouts();
+    expect(await screen.findByRole('heading', { name: 'Hoş Geldin' })).toBeInTheDocument();
   });
 
   it('lists workouts with summary, validates form, and creates a new workout', async () => {
@@ -63,7 +74,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           entries: initial,
@@ -78,7 +89,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
         }),
       );
 
-    renderWorkouts(true);
+    renderWorkouts();
 
     expect(await screen.findByText('Tempolu Koşu')).toBeInTheDocument();
     expect(screen.getByText('5 km parkur')).toBeInTheDocument();
@@ -119,7 +130,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           entries: [entry],
@@ -141,7 +152,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
         }),
       );
 
-    renderWorkouts(true);
+    renderWorkouts();
     expect(await screen.findByText('Bacak')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Düzenle' }));
@@ -174,7 +185,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
     const user = userEvent.setup();
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(
         jsonResponse(200, {
           entries: [],
@@ -188,7 +199,7 @@ describe('Frontend Workouts Page (AUTH-10)', () => {
         }),
       );
 
-    renderWorkouts(true);
+    renderWorkouts();
     await screen.findByText(/Henüz antrenman kaydı eklenmemiş/i);
 
     await user.type(screen.getByLabelText('Başlangıç Tarihi'), '2026-11-20');

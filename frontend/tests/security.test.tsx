@@ -67,7 +67,18 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
 
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'jwt-safe', user: mockUser }), {
+        new Response(
+          JSON.stringify({
+            mode: 'local',
+            isConfigured: false,
+            isAuthenticated: false,
+            user: null,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user: mockUser }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         }),
@@ -75,11 +86,18 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            periodDays: 7,
-            range: { from: '2026-11-20', to: '2026-11-26' },
-            weights: { latestKg: null, changeKg: null, points: [] },
-            calories: { totalCalories: 0, dailyAverageCalories: 0, loggedDays: 0, points: [] },
-            workouts: { totalWorkouts: 0, totalDurationMinutes: 0 },
+            period: { days: 7, from: '2026-11-20', to: '2026-11-26' },
+            summary: {
+              latestWeightKg: null,
+              latestWeightDate: null,
+              weightChangeKg: null,
+              todayCalories: 0,
+              averageDailyCalories: 0,
+              calorieDaysLogged: 0,
+              workoutCount: 0,
+              workoutDurationMinutes: 0,
+            },
+            trends: { weights: [], calories: [] },
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         ),
@@ -103,5 +121,18 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('location-probe')).toHaveTextContent('/dashboard');
     });
+  });
+
+  it('G-005: does not store JWT in localStorage and sends credentials: include on API calls', () => {
+    const authContextSrc = fs.readFileSync(
+      path.join(frontendRoot, 'src', 'context', 'AuthContext.tsx'),
+      'utf8',
+    );
+    const apiSrc = fs.readFileSync(path.join(frontendRoot, 'src', 'services', 'api.ts'), 'utf8');
+
+    expect(authContextSrc).not.toContain('localStorage');
+    expect(authContextSrc).not.toContain('sessionStorage');
+    expect(apiSrc).toContain("credentials: 'include'");
+    expect(apiSrc).not.toContain('Authorization');
   });
 });

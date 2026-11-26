@@ -69,6 +69,15 @@ export async function getCurrentUser(userId: string) {
   return { user: toPublicUser(user) };
 }
 
+export async function revokeAllUserSessions(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tokenVersion: { increment: 1 } },
+  });
+
+  return { message: 'Tüm cihazlardaki oturumlar sonlandırıldı.' };
+}
+
 export async function requestPasswordReset(input: ForgotPasswordInput) {
   const genericResponse = {
     message: 'Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi.',

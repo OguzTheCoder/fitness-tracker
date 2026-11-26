@@ -13,12 +13,29 @@ model User {
   email               String               @unique
   passwordHash        String
   tokenVersion        Int                  @default(0)
+  isPersonalOwner     Boolean              @default(false)
+  pinFingerprint      String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  profile             UserProfile?
   passwordResetTokens PasswordResetToken[]
   weightEntries       WeightEntry[]
   calorieEntries      CalorieEntry[]
   workoutEntries      WorkoutEntry[]
+}
+
+model UserProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCalorieGoal      Int      @default(2000)
+  proteinGoalG          Int      @default(150)
+  carbsGoalG            Int      @default(200)
+  fatGoalG              Int      @default(65)
+  dailyStepGoal         Int      @default(8000)
+  visibleMicronutrients String   @default("[\"Na\",\"K\",\"Mg\",\"Ca\",\"Fe\",\"Zn\"]")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model PasswordResetToken {

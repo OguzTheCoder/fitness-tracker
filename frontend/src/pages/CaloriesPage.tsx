@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { FormField } from '../components/FormField';
-import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
 import {
   calorieService,
@@ -37,7 +36,6 @@ function validateCalorieForm(date: string, mealName: string, caloriesText: strin
 }
 
 export function CaloriesPage() {
-  const { token } = useAuth();
   const [entries, setEntries] = useState<CalorieEntry[]>([]);
   const [dailyTotals, setDailyTotals] = useState<DailyCalorieTotal[]>([]);
   const [range, setRange] = useState<DateRange>({});
@@ -54,23 +52,19 @@ export function CaloriesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadEntries = useCallback(
-    async (activeRange: DateRange) => {
-      if (!token) return;
-      setIsLoading(true);
-      setListError(null);
-      try {
-        const res = await calorieService.list(token, activeRange);
-        setEntries(res.entries);
-        setDailyTotals(res.dailyTotals);
-      } catch (err) {
-        setListError(err instanceof ApiError ? err.message : 'Kalori kayıtları yüklenemedi.');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [token],
-  );
+  const loadEntries = useCallback(async (activeRange: DateRange) => {
+    setIsLoading(true);
+    setListError(null);
+    try {
+      const res = await calorieService.list(activeRange);
+      setEntries(res.entries);
+      setDailyTotals(res.dailyTotals);
+    } catch (err) {
+      setListError(err instanceof ApiError ? err.message : 'Kalori kayıtları yüklenemedi.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadEntries(range);
@@ -125,7 +119,6 @@ export function CaloriesPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!token) return;
 
     const errors = validateCalorieForm(date, mealName, calories);
     setFieldErrors(errors);
@@ -142,10 +135,10 @@ export function CaloriesPage() {
       };
 
       if (editingId) {
-        await calorieService.update(token, editingId, payload);
+        await calorieService.update(editingId, payload);
         setFeedback('Kalori kaydı güncellendi.');
       } else {
-        await calorieService.create(token, payload);
+        await calorieService.create(payload);
         setFeedback('Kalori kaydı eklendi.');
       }
 
@@ -170,12 +163,11 @@ export function CaloriesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!token) return;
     setDeletingId(id);
     setFormError(null);
     setFeedback(null);
     try {
-      await calorieService.remove(token, id);
+      await calorieService.remove(id);
       if (editingId === id) resetForm();
       setFeedback('Kalori kaydı silindi.');
       await loadEntries(range);

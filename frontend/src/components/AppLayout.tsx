@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/weights', label: 'Kilo', enabled: true },
   { to: '/calories', label: 'Kalori', enabled: true },
   { to: '/workouts', label: 'Antrenman', enabled: true },
+  { to: '/profile', label: 'Profil', enabled: true },
 ];
 
 export function AppLayout() {
@@ -61,7 +62,7 @@ export function AppLayout() {
             <span className="text-sm text-slate-300">{user?.name}</span>
             <button
               type="button"
-              onClick={logout}
+              onClick={() => void logout()}
               className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300"
             >
               Çıkış Yap

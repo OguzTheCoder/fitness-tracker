@@ -3,13 +3,26 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App';
-import { TOKEN_STORAGE_KEY } from '../src/context/AuthContext';
 
 const mockUser = {
   id: 'u1',
   name: 'Oğuz Yılmaz',
   email: 'oguz@example.com',
   createdAt: '2026-11-25T10:00:00.000Z',
+};
+
+const authStatusOk = {
+  mode: 'local',
+  isConfigured: true,
+  isAuthenticated: true,
+  user: mockUser,
+};
+
+const unauthStatus = {
+  mode: 'local',
+  isConfigured: false,
+  isAuthenticated: false,
+  user: null,
 };
 
 function jsonResponse(status: number, body: unknown) {
@@ -19,10 +32,7 @@ function jsonResponse(status: number, body: unknown) {
   });
 }
 
-function renderWeights(authenticated = true) {
-  if (authenticated) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-jwt-token');
-  }
+function renderWeights() {
   return render(
     <MemoryRouter initialEntries={['/weights']}>
       <AppRoutes />
@@ -31,9 +41,10 @@ function renderWeights(authenticated = true) {
 }
 
 describe('Frontend Weights Page (AUTH-8)', () => {
-  it('redirects unauthenticated users from /weights to /login', async () => {
-    renderWeights(false);
-    expect(await screen.findByRole('heading', { name: 'Giriş Yap' })).toBeInTheDocument();
+  it('redirects unauthenticated users from /weights to /access', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse(200, unauthStatus));
+    renderWeights();
+    expect(await screen.findByRole('heading', { name: 'Hoş Geldin' })).toBeInTheDocument();
   });
 
   it('lists entries, validates form, and handles create + same-day upsert', async () => {
@@ -57,12 +68,12 @@ describe('Frontend Weights Page (AUTH-8)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(200, { entries: initialEntries }))
       .mockResolvedValueOnce(jsonResponse(200, { entry: upsertedEntry, updated: true }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [upsertedEntry] }));
 
-    renderWeights(true);
+    renderWeights();
 
     expect(await screen.findByText('Sabah ölçümü')).toBeInTheDocument();
     expect(screen.getAllByText('79.4 kg').length).toBeGreaterThanOrEqual(1);
@@ -102,14 +113,14 @@ describe('Frontend Weights Page (AUTH-8)', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [entry] }))
       .mockResolvedValueOnce(jsonResponse(200, { entry: edited }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [edited] }))
       .mockResolvedValueOnce(jsonResponse(200, { message: 'Kilo kaydı silindi.' }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [] }));
 
-    renderWeights(true);
+    renderWeights();
     expect(await screen.findByText('İlk not')).toBeInTheDocument();
     expect(screen.getAllByText('78.5 kg').length).toBeGreaterThanOrEqual(1);
 
@@ -141,11 +152,11 @@ describe('Frontend Weights Page (AUTH-8)', () => {
     const user = userEvent.setup();
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse(200, { user: mockUser }))
+      .mockResolvedValueOnce(jsonResponse(200, authStatusOk))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [] }))
       .mockResolvedValueOnce(jsonResponse(200, { entries: [] }));
 
-    renderWeights(true);
+    renderWeights();
     await screen.findByText(/Henüz kilo kaydı eklenmemiş/i);
 
     await user.type(screen.getByLabelText('Başlangıç Tarihi'), '2026-11-26');

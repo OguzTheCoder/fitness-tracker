@@ -28,11 +28,14 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-export function signAccessToken(user: Pick<User, 'id' | 'email' | 'tokenVersion'>): string {
+export function signAccessToken(
+  user: Pick<User, 'id' | 'email' | 'tokenVersion'>,
+  expiresInOverride?: SignOptions['expiresIn'],
+): string {
   const options: SignOptions = {
     algorithm: JWT_ALGORITHM,
     subject: user.id,
-    expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
+    expiresIn: (expiresInOverride ?? env.JWT_EXPIRES_IN) as SignOptions['expiresIn'],
   };
   return jwt.sign({ email: user.email, tv: user.tokenVersion }, env.JWT_SECRET, options);
 }

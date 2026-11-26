@@ -30,9 +30,8 @@ export interface StatsSummaryResponse {
 }
 
 export const statsService = {
-  getSummary: (token: string, days: StatsDays = 7) =>
+  getSummary: (days: StatsDays = 7) =>
     apiRequest<StatsSummaryResponse>(`/stats/summary?days=${days}`, {
       method: 'GET',
-      token,
     }),
 };

@@ -31,20 +31,19 @@ function formatWeightChange(changeKg: number | null): { text: string; tone: stri
 }
 
 export function DashboardPage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [days, setDays] = useState<StatsDays>(7);
   const [stats, setStats] = useState<StatsSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
     let cancelled = false;
     setIsLoading(true);
     setError(null);
 
     statsService
-      .getSummary(token, days)
+      .getSummary(days)
       .then((res) => {
         if (!cancelled) setStats(res);
       })
@@ -60,7 +59,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [token, days]);
+  }, [days]);
 
   const summary = stats?.summary;
   const weightDelta = formatWeightChange(summary?.weightChangeKg ?? null);
@@ -71,7 +70,10 @@ export function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Hoş geldin, {user?.name}</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Aktif oturum: <span className="text-slate-200">{user?.email}</span>
+            Aktif oturum:{' '}
+            <span className="text-slate-200">
+              {user?.email === 'personal@local.fitness' ? 'Kişisel Profil' : user?.email}
+            </span>
           </p>
         </div>
 
