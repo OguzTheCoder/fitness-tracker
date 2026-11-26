@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BackupSection } from '../components/BackupSection';
 import { FormField } from '../components/FormField';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
@@ -89,6 +90,7 @@ export function ProfilePage() {
     try {
       const res = await profileService.get();
       setName(res.profile.name);
+      syncUserName(res.profile.name);
       setDailyCalorieGoal(String(res.profile.dailyCalorieGoal));
       setProteinGoalG(String(res.profile.proteinGoalG));
       setCarbsGoalG(String(res.profile.carbsGoalG));
@@ -101,7 +103,7 @@ export function ProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [syncUserName]);
 
   useEffect(() => {
     void loadProfile();
@@ -349,6 +351,8 @@ export function ProfilePage() {
           </button>
         </div>
       </form>
+
+      <BackupSection onProfileRestored={loadProfile} />
 
       <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
         <div>

@@ -40,3 +40,35 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   return data as T;
 }
+
+function extractDownloadFilename(disposition: string | null, fallback: string): string {
+  if (!disposition) return fallback;
+  const match = disposition.match(/filename="([^"]+)"/i);
+  return match?.[1] ? match[1] : fallback;
+}
+
+export async function apiDownload(
+  path: string,
+  fallbackFilename: string,
+): Promise<{ filename: string; blob: Blob }> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new ApiError(
+      response.status,
+      typeof data.error === 'string' ? data.error : 'Dosya indirilemedi.',
+      data.details && typeof data.details === 'object' ? data.details : undefined,
+    );
+  }
+
+  const blob = await response.blob();
+  const filename = extractDownloadFilename(
+    response.headers.get('Content-Disposition'),
+    fallbackFilename,
+  );
+  return { filename, blob };
+}
