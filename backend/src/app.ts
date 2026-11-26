@@ -7,6 +7,8 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { createRateLimiters, type RateLimitConfig } from './middlewares/rateLimit.js';
 import { accessRouter } from './modules/access/access.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { BACKUP_IMPORT_MAX_BODY } from './modules/backup/backup.constants.js';
+import { backupRouter } from './modules/backup/backup.routes.js';
 import { caloriesRouter } from './modules/calories/calories.routes.js';
 import { cardioRouter } from './modules/cardio/cardio.routes.js';
 import { exercisesRouter } from './modules/exercises/exercises.routes.js';
@@ -24,6 +26,7 @@ export interface CreateAppOptions {
   rateLimit?: Partial<RateLimitConfig>;
   appPin?: string | null;
   cookieSecure?: boolean;
+  backupImportLimit?: string;
 }
 
 const AUTH_WRITE_PATHS = [
@@ -37,7 +40,9 @@ const AUTH_WRITE_PATHS = [
 
 export function createApp(options?: CreateAppOptions) {
   const app = express();
-  const { apiLimiter, authWriteLimiters, barcodeLimiter } = createRateLimiters(options?.rateLimit);
+  const { apiLimiter, authWriteLimiters, barcodeLimiter, backupLimiter } = createRateLimiters(
+    options?.rateLimit,
+  );
 
   if (options?.appPin !== undefined) {
     app.locals.appPin = options.appPin;
@@ -50,6 +55,11 @@ export function createApp(options?: CreateAppOptions) {
   app.use(helmet({ referrerPolicy: { policy: 'no-referrer' } }));
   app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
   app.use(cookieParser());
+  app.use('/api/backup', backupLimiter);
+  app.post(
+    '/api/backup/import',
+    express.json({ limit: options?.backupImportLimit ?? BACKUP_IMPORT_MAX_BODY }),
+  );
   app.use(express.json({ limit: '16kb' }));
 
   app.use('/api', apiLimiter);
@@ -62,6 +72,7 @@ export function createApp(options?: CreateAppOptions) {
 
   app.use('/api/access', accessRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/backup', backupRouter);
   app.use('/api/profile', profileRouter);
   app.use('/api/foods', foodsRouter);
   app.use('/api/recipes', recipesRouter);

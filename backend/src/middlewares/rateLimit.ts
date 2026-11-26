@@ -7,6 +7,7 @@ export interface RateLimitConfig {
   authIpMax: number;
   authAccountMax: number;
   barcodeMax: number;
+  backupMax: number;
 }
 
 const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
@@ -15,6 +16,7 @@ const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   authIpMax: 25,
   authAccountMax: 10,
   barcodeMax: 40,
+  backupMax: 20,
 };
 
 const RATE_LIMIT_MESSAGE = {
@@ -32,6 +34,7 @@ export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
   apiLimiter: RequestHandler;
   authWriteLimiters: RequestHandler[];
   barcodeLimiter: RequestHandler;
+  backupLimiter: RequestHandler;
 } {
   const config: RateLimitConfig = { ...DEFAULT_RATE_LIMIT_CONFIG, ...overrides };
 
@@ -71,9 +74,19 @@ export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
     message: RATE_LIMIT_MESSAGE,
   });
 
+  const backupLimiter = rateLimit({
+    windowMs: config.windowMs,
+    limit: config.backupMax,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? '127.0.0.1'),
+    message: RATE_LIMIT_MESSAGE,
+  });
+
   return {
     apiLimiter,
     authWriteLimiters: [authIpLimiter, authAccountLimiter],
     barcodeLimiter,
+    backupLimiter,
   };
 }

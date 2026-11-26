@@ -35,7 +35,17 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   if (typeof err === 'object' && err !== null && 'type' in err) {
     if (err.type === 'entity.too.large') {
-      res.status(413).json({ error: 'İstek gövdesi izin verilen sınırı (16 KB) aşıyor.' });
+      const limitBytes =
+        'limit' in err && typeof err.limit === 'number' && Number.isFinite(err.limit)
+          ? err.limit
+          : 16 * 1024;
+      const limitLabel =
+        limitBytes >= 1024 * 1024
+          ? `${Math.round((limitBytes / (1024 * 1024)) * 10) / 10} MB`
+          : `${Math.round(limitBytes / 1024)} KB`;
+      res.status(413).json({
+        error: `İstek gövdesi izin verilen sınırı (${limitLabel}) aşıyor.`,
+      });
       return;
     }
     if (err.type === 'entity.parse.failed') {
