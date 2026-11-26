@@ -3,13 +3,13 @@
 > **Kurallar:** Projenin giriş noktasıdır; **her adımdan sonra güncellenir**. Yalnızca güncel durum ve sıradaki 1–3 adım tutulur; eski işler burada biriktirilmez (biten yapılar [TAMAMLANANLAR.md](./TAMAMLANANLAR.md) içine gider).
 
 ## Neredeyiz?
-- **Faz:** Faz 1 — Authentication **TAMAMLANDI** (`AUTH-1`..`AUTH-7` kodlama ve doğrulama bitti; yalnızca `AUTH-7` commit/push/PR merge kaldı)
-- **Aktif Branch:** `AUTH-7-integration-tests`
-- **Son Adım:** `AUTH-7` tamamlandı — Backend (Vitest + Supertest + izole SQLite `test.db`, 10/10) ve Frontend (Vitest + React Testing Library, 6/6) entegrasyon testleri ile her iki `build` 0 hatayla geçti.
+- **Faz:** Faz 2 — Fitness Tracker MVP (`AUTH-8` kodlama ve testleri tamamlandı; commit/push/PR merge bekliyor)
+- **Aktif Branch:** `AUTH-8-daily-weight-tracking`
+- **Son Adım:** `AUTH-8` (Günlük Kilo Takibi) tamamlandı — `WeightEntry` migration, `/api/weights` CRUD/upsert API, ortak `AppLayout` + `DateRangeFilter` + `/weights` UI; Backend 15/15, Frontend 10/10 test ve her iki `build` 0 hatayla geçti.
 
 ## Sırada Ne Var?
-1. `AUTH-7` değişikliklerini Smart Commit (`AUTH-7 ...`) ile commit edip `origin`'e push etmek, PR açıp merge etmek (Faz 1 tamamen `Done`).
-2. Yeni sohbette `main`'i çekip Faz 2 Fitness Tracker MVP (`AUTH-8` Günlük Kilo Takibi) ile başlamak.
+1. `AUTH-8` değişikliklerini Smart Commit (`AUTH-8 ...`) ile commit edip `origin`'e push etmek, PR açıp `main`'e merge etmek.
+2. `main`'i güncelleyip `AUTH-9-manual-calorie-tracking` dalında Manuel Kalori Takibi (`CalorieEntry`, `/api/calories`, `/calories` + günlük toplam + testler) ile devam etmek.
 
 ## Ayrıntı Nerede?
 - Plan ve mimari şablon: [KILAVUZ.md](./KILAVUZ.md)
