@@ -7,6 +7,7 @@ import { CaloriesPage } from './pages/CaloriesPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { LoginPage } from './pages/LoginPage';
+import { NutritionPage } from './pages/NutritionPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
@@ -26,6 +27,7 @@ export function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/weights" element={<WeightsPage />} />
+            <Route path="/nutrition" element={<NutritionPage />} />
             <Route path="/calories" element={<CaloriesPage />} />
             <Route path="/workouts" element={<WorkoutsPage />} />
             <Route path="/profile" element={<ProfilePage />} />

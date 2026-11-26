@@ -10,7 +10,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Özet', enabled: true },
   { to: '/weights', label: 'Kilo', enabled: true },
-  { to: '/calories', label: 'Kalori', enabled: true },
+  { to: '/nutrition', label: 'Beslenme', enabled: true },
   { to: '/workouts', label: 'Antrenman', enabled: true },
   { to: '/profile', label: 'Profil', enabled: true },
 ];

@@ -8,7 +8,10 @@ import { createRateLimiters, type RateLimitConfig } from './middlewares/rateLimi
 import { accessRouter } from './modules/access/access.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { caloriesRouter } from './modules/calories/calories.routes.js';
+import { foodsRouter } from './modules/foods/foods.routes.js';
+import { nutritionRouter } from './modules/nutrition/nutrition.routes.js';
 import { profileRouter } from './modules/profile/profile.routes.js';
+import { recipesRouter } from './modules/recipes/recipes.routes.js';
 import { statsRouter } from './modules/stats/stats.routes.js';
 import { weightsRouter } from './modules/weights/weights.routes.js';
 import { workoutsRouter } from './modules/workouts/workouts.routes.js';
@@ -55,6 +58,9 @@ export function createApp(options?: CreateAppOptions) {
   app.use('/api/access', accessRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/profile', profileRouter);
+  app.use('/api/foods', foodsRouter);
+  app.use('/api/recipes', recipesRouter);
+  app.use('/api/nutrition', nutritionRouter);
   app.use('/api/weights', weightsRouter);
   app.use('/api/calories', caloriesRouter);
   app.use('/api/workouts', workoutsRouter);
