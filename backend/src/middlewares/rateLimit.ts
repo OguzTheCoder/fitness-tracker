@@ -6,6 +6,7 @@ export interface RateLimitConfig {
   apiMax: number;
   authIpMax: number;
   authAccountMax: number;
+  pinGlobalMax: number;
   barcodeMax: number;
   backupMax: number;
   syncMax: number;
@@ -16,6 +17,7 @@ const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   apiMax: 300,
   authIpMax: 25,
   authAccountMax: 10,
+  pinGlobalMax: 10,
   barcodeMax: 40,
   backupMax: 20,
   syncMax: 120,
@@ -35,6 +37,7 @@ function extractNormalizedEmail(req: Request): string | null {
 export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
   apiLimiter: RequestHandler;
   authWriteLimiters: RequestHandler[];
+  pinGlobalLimiter: RequestHandler;
   barcodeLimiter: RequestHandler;
   backupLimiter: RequestHandler;
   syncLimiter: RequestHandler;
@@ -68,6 +71,15 @@ export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
     message: RATE_LIMIT_MESSAGE,
   });
 
+  const pinGlobalLimiter = rateLimit({
+    windowMs: config.windowMs,
+    limit: config.pinGlobalMax,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: () => 'global-pin-access',
+    message: RATE_LIMIT_MESSAGE,
+  });
+
   const barcodeLimiter = rateLimit({
     windowMs: config.windowMs,
     limit: config.barcodeMax,
@@ -98,6 +110,7 @@ export function createRateLimiters(overrides?: Partial<RateLimitConfig>): {
   return {
     apiLimiter,
     authWriteLimiters: [authIpLimiter, authAccountLimiter],
+    pinGlobalLimiter,
     barcodeLimiter,
     backupLimiter,
     syncLimiter,

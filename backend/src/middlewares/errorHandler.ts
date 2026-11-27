@@ -6,6 +6,7 @@ export class AppError extends Error {
     public readonly statusCode: number,
     message: string,
     public readonly details?: unknown,
+    public readonly headers?: Record<string, string>,
   ) {
     super(message);
     this.name = 'AppError';
@@ -18,6 +19,11 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof AppError) {
+    if (err.headers) {
+      for (const [key, value] of Object.entries(err.headers)) {
+        res.setHeader(key, value);
+      }
+    }
     res.status(err.statusCode).json({
       error: err.message,
       ...(err.details ? { details: err.details } : {}),

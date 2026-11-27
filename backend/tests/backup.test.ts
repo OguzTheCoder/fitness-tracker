@@ -5,6 +5,7 @@ import { prisma } from '../src/config/prisma.js';
 import { sanitizeCsvCell, UTF8_BOM } from '../src/modules/backup/backup.csv.js';
 import { ensureCoreExercisesSeeded } from '../src/modules/exercises/exercises.seed.js';
 import { ensureCoreFoodsSeeded } from '../src/modules/foods/foods.seed.js';
+import { extractSessionToken } from './helpers/authCookie.js';
 
 const app = createApp({
   rateLimit: { apiMax: 1000, backupMax: 1000, authIpMax: 1000, authAccountMax: 1000 },
@@ -19,7 +20,7 @@ async function registerUser(name: string, email: string) {
   expect(res.status).toBe(201);
   return {
     id: res.body.user.id as string,
-    token: res.body.token as string,
+    token: extractSessionToken(res.headers['set-cookie']),
     cookie: res.headers['set-cookie'] as string[],
   };
 }
@@ -648,7 +649,7 @@ describe('Backup Export & Import API (AUTH-13 / v1.4.0)', () => {
       email: 'limit-backup@example.com',
       password: 'Password123!',
     });
-    const token = reg.body.token as string;
+    const token = extractSessionToken(reg.headers['set-cookie']);
 
     // Global 16kb limit on other endpoints remains strictly enforced
     const globalLarge = await request(restrictedApp).post('/api/auth/login').send({

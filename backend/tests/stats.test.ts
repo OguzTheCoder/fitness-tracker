@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { prisma } from '../src/config/prisma.js';
 import { getRollingDateRange } from '../src/utils/dateRange.js';
+import { extractSessionToken } from './helpers/authCookie.js';
 
 const app = createApp();
 
@@ -12,7 +13,10 @@ async function createAuthedUser(email: string, name = 'Test Kullanıcı') {
     email,
     password: 'Password123!',
   });
-  return { token: res.body.token as string, userId: res.body.user.id as string };
+  return {
+    token: extractSessionToken(res.headers['set-cookie']),
+    userId: res.body.user.id as string,
+  };
 }
 
 function isoDaysAgo(daysAgo: number): string {

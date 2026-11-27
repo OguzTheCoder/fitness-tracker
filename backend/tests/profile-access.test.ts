@@ -23,6 +23,7 @@ function toCookieRequestHeader(setCookieValue: string): string {
 
 describe('Profile, Environment Access & HttpOnly Cookie Session (AUTH-9 / v1.0.2)', () => {
   beforeEach(async () => {
+    await prisma.accessAttemptState.deleteMany();
     await prisma.workoutEntry.deleteMany();
     await prisma.calorieEntry.deleteMany();
     await prisma.weightEntry.deleteMany();

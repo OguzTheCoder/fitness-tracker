@@ -3,6 +3,7 @@ import { env } from '../../config/env.js';
 import { getMailProvider } from '../../config/mail.js';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../middlewares/errorHandler.js';
+import { PERSONAL_OWNER_EMAIL } from '../access/access.constants.js';
 import type {
   ForgotPasswordInput,
   LoginInput,
@@ -23,6 +24,10 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
 );
 
 export async function registerUser(input: RegisterInput) {
+  if (input.email === PERSONAL_OWNER_EMAIL) {
+    throw new AppError(403, 'Bu e-posta adresi sistem tarafından ayrılmıştır.');
+  }
+
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) {
     throw new AppError(409, 'Bu e-posta adresi zaten kayıtlı.');
@@ -44,19 +49,23 @@ export async function registerUser(input: RegisterInput) {
 }
 
 export async function loginUser(input: LoginInput) {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const isReservedPersonalEmail = input.email === PERSONAL_OWNER_EMAIL;
+  const user = isReservedPersonalEmail
+    ? null
+    : await prisma.user.findUnique({ where: { email: input.email } });
+  const effectiveUser = user && !user.isPersonalOwner ? user : null;
   const isPasswordValid = await bcrypt.compare(
     input.password,
-    user ? user.passwordHash : DUMMY_PASSWORD_HASH,
+    effectiveUser ? effectiveUser.passwordHash : DUMMY_PASSWORD_HASH,
   );
 
-  if (!user || !isPasswordValid) {
+  if (!effectiveUser || !isPasswordValid) {
     throw new AppError(401, 'E-posta veya şifre hatalı.');
   }
 
   return {
-    token: signAccessToken(user),
-    user: toPublicUser(user),
+    token: signAccessToken(effectiveUser),
+    user: toPublicUser(effectiveUser),
   };
 }
 
@@ -84,8 +93,12 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
   };
 
   const { rawToken, tokenHash } = generateResetToken();
+  if (input.email === PERSONAL_OWNER_EMAIL) {
+    return genericResponse;
+  }
+
   const user = await prisma.user.findUnique({ where: { email: input.email } });
-  if (!user) {
+  if (!user || user.isPersonalOwner) {
     return genericResponse;
   }
 
@@ -121,10 +134,21 @@ export async function resetPassword(input: ResetPasswordInput) {
   const tokenHash = hashResetToken(input.token);
   const record = await prisma.passwordResetToken.findUnique({
     where: { tokenHash },
-    select: { id: true, userId: true, usedAt: true, expiresAt: true },
+    select: {
+      id: true,
+      userId: true,
+      usedAt: true,
+      expiresAt: true,
+      user: { select: { isPersonalOwner: true } },
+    },
   });
 
-  if (!record || record.usedAt || record.expiresAt.getTime() <= Date.now()) {
+  if (
+    !record ||
+    record.user.isPersonalOwner ||
+    record.usedAt ||
+    record.expiresAt.getTime() <= Date.now()
+  ) {
     throw new AppError(400, 'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.');
   }
 

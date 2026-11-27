@@ -4,6 +4,7 @@ import { createApp } from '../src/app.js';
 import { prisma } from '../src/config/prisma.js';
 import { CORE_EXERCISES } from '../src/modules/exercises/coreExercises.data.js';
 import { getRollingDateRange } from '../src/utils/dateRange.js';
+import { extractSessionToken } from './helpers/authCookie.js';
 
 const app = createApp();
 
@@ -13,7 +14,10 @@ async function createAuthedUser(email: string, name = 'Test Kullanıcı') {
     email,
     password: 'Password123!',
   });
-  return { token: res.body.token as string, userId: res.body.user.id as string };
+  return {
+    token: extractSessionToken(res.headers['set-cookie']),
+    userId: res.body.user.id as string,
+  };
 }
 
 describe('Workouts v2, Templates, Exercises, Cardio & Steps (AUTH-12)', () => {

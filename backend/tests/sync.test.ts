@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
+import { APP_VERSION, createApp } from '../src/app.js';
 import { prisma } from '../src/config/prisma.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,7 +58,7 @@ describe('Delta Sync, Last-Write-Wins & Model B Readiness (AUTH-14 / v1.5.0)', (
     expect(ready.status).toBe(200);
     expect(ready.body.status).toBe('ok');
     expect(ready.body.database).toBe('up');
-    expect(ready.body.version).toBe('1.5.0');
+    expect(ready.body.version).toBe(APP_VERSION);
     expect(ready.headers['access-control-allow-origin']).toBe('https://app.example.com');
 
     const blockedCors = await request(app).get('/api/ready').set('Origin', 'https://evil.example.com');
