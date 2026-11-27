@@ -4,6 +4,7 @@ import { createApp } from '../src/app.js';
 import { MemoryMailProvider, setMailProvider } from '../src/config/mail.js';
 import { prisma } from '../src/config/prisma.js';
 import { hashResetToken } from '../src/modules/auth/auth.utils.js';
+import { extractSessionCookieHeader, getSessionSetCookie } from './helpers/authCookie.js';
 
 const app = createApp();
 const mailProvider = new MemoryMailProvider();
@@ -27,7 +28,7 @@ describe('Auth API Integration (Isolated SQLite DB)', () => {
   });
 
   describe('POST /api/auth/register', () => {
-    it('registers a new user and returns JWT + public profile', async () => {
+    it('registers a new user, sets HttpOnly cookie without body token, and returns public profile', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Oğuz Yılmaz',
         email: 'Oguz@Example.com',
@@ -35,7 +36,8 @@ describe('Auth API Integration (Isolated SQLite DB)', () => {
       });
 
       expect(res.status).toBe(201);
-      expect(typeof res.body.token).toBe('string');
+      expect(res.body.token).toBeUndefined();
+      expect(getSessionSetCookie(res.headers['set-cookie'])).toContain('HttpOnly');
       expect(res.body.user).toMatchObject({
         name: 'Oğuz Yılmaz',
         email: 'oguz@example.com',
@@ -82,18 +84,17 @@ describe('Auth API Integration (Isolated SQLite DB)', () => {
       });
     });
 
-    it('logs in with valid credentials and resolves /api/auth/me', async () => {
+    it('logs in with valid credentials and resolves /api/auth/me via HttpOnly cookie', async () => {
       const loginRes = await request(app).post('/api/auth/login').send({
         email: 'OGUZ@example.com',
         password: 'Password123!',
       });
 
       expect(loginRes.status).toBe(200);
-      expect(typeof loginRes.body.token).toBe('string');
+      expect(loginRes.body.token).toBeUndefined();
+      const cookieHeader = extractSessionCookieHeader(loginRes.headers['set-cookie']);
 
-      const meRes = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${loginRes.body.token}`);
+      const meRes = await request(app).get('/api/auth/me').set('Cookie', cookieHeader);
 
       expect(meRes.status).toBe(200);
       expect(meRes.body.user.email).toBe('oguz@example.com');

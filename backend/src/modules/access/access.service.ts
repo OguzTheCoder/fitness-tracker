@@ -11,12 +11,21 @@ import {
   DEFAULT_PROFILE_GOALS,
   DEFAULT_VISIBLE_MICRONUTRIENTS,
 } from '../profile/profile.constants.js';
+import {
+  computePinLockoutDurationMs,
+  PERSONAL_OWNER_EMAIL,
+  PERSONAL_PIN_ATTEMPT_SCOPE,
+} from './access.constants.js';
 import type { SetupAccessInput, UnlockAccessInput } from './access.schema.js';
 
 export type AccessMode = 'local' | 'pin';
 
-const PERSONAL_OWNER_EMAIL = 'personal@local.fitness';
 const BCRYPT_SALT_ROUNDS = 10;
+
+export function getRuntimeNodeEnv(req: Request): 'development' | 'test' | 'production' {
+  const override = req.app.locals.nodeEnv as 'development' | 'test' | 'production' | undefined;
+  return override ?? env.NODE_ENV;
+}
 
 export function getActiveAppPin(req: Request): string | undefined {
   const override = req.app.locals.appPin as string | null | undefined;
@@ -28,8 +37,78 @@ export function getActiveAppPin(req: Request): string | undefined {
   return env.APP_PIN;
 }
 
+export function isPublicAuthAllowed(req: Request): boolean {
+  const override = req.app.locals.allowPublicAuth as boolean | undefined;
+  if (typeof override === 'boolean') {
+    return override;
+  }
+  if (env.ALLOW_PUBLIC_AUTH !== undefined) {
+    return env.ALLOW_PUBLIC_AUTH;
+  }
+  return getActiveAppPin(req) === undefined;
+}
+
 export function getAccessMode(activePin: string | undefined): AccessMode {
   return activePin ? 'pin' : 'local';
+}
+
+export async function assertPinNotLocked(now = new Date()): Promise<void> {
+  const state = await prisma.accessAttemptState.findUnique({
+    where: { scope: PERSONAL_PIN_ATTEMPT_SCOPE },
+    select: { lockedUntil: true },
+  });
+
+  if (!state?.lockedUntil) {
+    return;
+  }
+
+  const remainingMs = state.lockedUntil.getTime() - now.getTime();
+  if (remainingMs > 0) {
+    const retryAfterSeconds = Math.max(1, Math.ceil(remainingMs / 1000));
+    throw new AppError(
+      429,
+      `Çok fazla hatalı PIN denemesi yapıldı. Lütfen ${retryAfterSeconds} saniye bekleyip tekrar deneyin.`,
+      undefined,
+      { 'Retry-After': String(retryAfterSeconds) },
+    );
+  }
+}
+
+export async function recordFailedPinAttempt(now = new Date()): Promise<{
+  failedCount: number;
+  lockedUntil: Date | null;
+}> {
+  const updated = await prisma.accessAttemptState.upsert({
+    where: { scope: PERSONAL_PIN_ATTEMPT_SCOPE },
+    create: {
+      scope: PERSONAL_PIN_ATTEMPT_SCOPE,
+      failedCount: 1,
+      lastFailedAt: now,
+    },
+    update: {
+      failedCount: { increment: 1 },
+      lastFailedAt: now,
+    },
+  });
+
+  const lockDurationMs = computePinLockoutDurationMs(updated.failedCount);
+  if (lockDurationMs <= 0) {
+    return { failedCount: updated.failedCount, lockedUntil: null };
+  }
+
+  const lockedUntil = new Date(now.getTime() + lockDurationMs);
+  await prisma.accessAttemptState.update({
+    where: { scope: PERSONAL_PIN_ATTEMPT_SCOPE },
+    data: { lockedUntil },
+  });
+
+  return { failedCount: updated.failedCount, lockedUntil };
+}
+
+export async function resetPinAttemptState(): Promise<void> {
+  await prisma.accessAttemptState.deleteMany({
+    where: { scope: PERSONAL_PIN_ATTEMPT_SCOPE },
+  });
 }
 
 export function computePinFingerprint(pin: string): string {
@@ -127,10 +206,13 @@ export async function setupPersonalAccess(
 ) {
   const mode = getAccessMode(activePin);
   if (activePin) {
+    await assertPinNotLocked();
     const candidate = input.pin ?? '';
     if (!verifyPinConstantTime(candidate, activePin)) {
+      await recordFailedPinAttempt();
       throw new AppError(401, 'PIN hatalı.');
     }
+    await resetPinAttemptState();
   }
 
   const existingOwner = await getPersonalOwner();
@@ -182,10 +264,15 @@ export async function unlockPersonalAccess(
     throw new AppError(400, 'PIN kilidi bu ortamda aktif değil.');
   }
 
+  await assertPinNotLocked();
+
   const isPinValid = verifyPinConstantTime(input.pin, activePin);
   if (!isPinValid) {
+    await recordFailedPinAttempt();
     throw new AppError(401, 'PIN hatalı.');
   }
+
+  await resetPinAttemptState();
 
   const owner = await getPersonalOwner();
   if (!owner) {
@@ -202,7 +289,14 @@ export async function unlockPersonalAccess(
   };
 }
 
-export async function resumeLocalPersonalSession(activePin: string | undefined) {
+export async function resumeLocalPersonalSession(
+  activePin: string | undefined,
+  nodeEnv: 'development' | 'test' | 'production' = env.NODE_ENV,
+) {
+  if (nodeEnv === 'production') {
+    throw new AppError(403, 'Canlı ortamda doğrudan yerel oturum kapalıdır.');
+  }
+
   if (activePin) {
     throw new AppError(403, 'PIN kilidi aktifken doğrudan yerel oturum açılamaz.');
   }

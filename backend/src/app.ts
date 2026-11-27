@@ -28,11 +28,13 @@ import { weightsRouter } from './modules/weights/weights.routes.js';
 import { workoutsRouter } from './modules/workouts/workouts.routes.js';
 import { workoutTemplatesRouter } from './modules/workoutTemplates/workoutTemplates.routes.js';
 
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '2.0.1';
 
 export interface CreateAppOptions {
   rateLimit?: Partial<RateLimitConfig>;
   appPin?: string | null;
+  nodeEnv?: 'development' | 'test' | 'production';
+  allowPublicAuth?: boolean;
   cookieSecure?: boolean;
   backupImportLimit?: string;
   syncPushLimit?: string;
@@ -49,12 +51,21 @@ const AUTH_WRITE_PATHS = [
   '/api/auth/reset-password',
   '/api/access/setup',
   '/api/access/unlock',
+  '/api/access/local-session',
 ];
+
+const PIN_ACCESS_PATHS = ['/api/access/setup', '/api/access/unlock'];
 
 export function createApp(options?: CreateAppOptions) {
   const app = express();
-  const { apiLimiter, authWriteLimiters, barcodeLimiter, backupLimiter, syncLimiter } =
-    createRateLimiters(options?.rateLimit);
+  const {
+    apiLimiter,
+    authWriteLimiters,
+    pinGlobalLimiter,
+    barcodeLimiter,
+    backupLimiter,
+    syncLimiter,
+  } = createRateLimiters(options?.rateLimit);
 
   const trustProxy = options?.trustProxy ?? env.TRUST_PROXY;
   if (trustProxy > 0) {
@@ -63,6 +74,12 @@ export function createApp(options?: CreateAppOptions) {
 
   if (options?.appPin !== undefined) {
     app.locals.appPin = options.appPin;
+  }
+  if (options?.nodeEnv !== undefined) {
+    app.locals.nodeEnv = options.nodeEnv;
+  }
+  if (options?.allowPublicAuth !== undefined) {
+    app.locals.allowPublicAuth = options.allowPublicAuth;
   }
   if (options?.cookieSecure !== undefined) {
     app.locals.cookieSecure = options.cookieSecure;
@@ -99,6 +116,7 @@ export function createApp(options?: CreateAppOptions) {
 
   app.use('/api', apiLimiter);
   app.post(AUTH_WRITE_PATHS, ...authWriteLimiters);
+  app.post(PIN_ACCESS_PATHS, pinGlobalLimiter);
   app.use('/api/foods/barcode', barcodeLimiter);
 
   app.get('/api/health', (_req, res) => {

@@ -302,7 +302,7 @@ describe('Frontend v2.0.0 Redesign — Theme, Responsive Navigation, Bento & Acc
     });
   });
 
-  it('ships synchronized v2.0.0 versions across backend, frontend, and Service Worker cache', () => {
+  it('ships synchronized versions across backend, frontend, APP_VERSION, and Service Worker cache', () => {
     const repoRoot = path.resolve(__dirname, '..', '..');
     const backendPkg = JSON.parse(
       fs.readFileSync(path.join(repoRoot, 'backend', 'package.json'), 'utf8'),
@@ -310,13 +310,18 @@ describe('Frontend v2.0.0 Redesign — Theme, Responsive Navigation, Bento & Acc
     const frontendPkg = JSON.parse(
       fs.readFileSync(path.join(repoRoot, 'frontend', 'package.json'), 'utf8'),
     ) as { version: string };
+    const backendAppSrc = fs.readFileSync(
+      path.join(repoRoot, 'backend', 'src', 'app.ts'),
+      'utf8',
+    );
     const swSrc = fs.readFileSync(
       path.join(repoRoot, 'frontend', 'public', 'sw.js'),
       'utf8',
     );
 
-    expect(backendPkg.version).toBe('2.0.0');
-    expect(frontendPkg.version).toBe('2.0.0');
-    expect(swSrc).toContain("const CACHE_NAME = 'ft-shell-v2.0.0'");
+    expect(backendPkg.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(frontendPkg.version).toBe(backendPkg.version);
+    expect(backendAppSrc).toContain(`APP_VERSION = '${backendPkg.version}'`);
+    expect(swSrc).toContain(`const CACHE_NAME = 'ft-shell-v${frontendPkg.version}'`);
   });
 });

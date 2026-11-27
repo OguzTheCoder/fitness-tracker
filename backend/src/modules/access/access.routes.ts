@@ -5,6 +5,7 @@ import { setupAccessSchema, unlockAccessSchema } from './access.schema.js';
 import {
   getAccessStatus,
   getActiveAppPin,
+  getRuntimeNodeEnv,
   resumeLocalPersonalSession,
   setupPersonalAccess,
   unlockPersonalAccess,
@@ -43,7 +44,8 @@ accessRouter.post('/unlock', async (req, res) => {
 
 accessRouter.post('/local-session', async (req, res) => {
   const activePin = getActiveAppPin(req);
-  const result = await resumeLocalPersonalSession(activePin);
+  const nodeEnv = getRuntimeNodeEnv(req);
+  const result = await resumeLocalPersonalSession(activePin, nodeEnv);
   setSessionCookie(req, res, result.token, getPersistentSessionTtlMs());
   res.status(200).json({
     mode: result.mode,
