@@ -285,24 +285,25 @@ export function TemplatesExercisesTab({
   return (
     <div className="space-y-6">
       {/* Program Şablonları */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 space-y-5">
+      <section className="ft-card space-y-5 p-5 sm:p-6">
         <div>
-          <h2 className="text-base font-semibold text-white">
+          <h2 className="text-base font-semibold text-ink">
             {editingTplId ? 'Program Şablonunu Düzenle' : 'Program Şablonları'}
           </h2>
-          <p className="mt-0.5 text-xs text-slate-400">
-            Sık yaptığın rutinleri (örn. İtiş, Çekiş, Bacak) bir kez kaydet, antrenman eklerken tek tıkla yükle.
+          <p className="mt-0.5 text-xs text-ink-muted">
+            Sık yaptığın rutinleri (örn. İtiş, Çekiş, Bacak) bir kez kaydet, antrenman eklerken tek
+            tıkla yükle.
           </p>
         </div>
 
         <form onSubmit={handleTemplateSubmit} noValidate className="space-y-4">
           {tplError && (
-            <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-300">
+            <div role="alert" className="ft-alert-error">
               {tplError}
             </div>
           )}
           {tplFeedback && (
-            <div role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+            <div role="status" className="ft-alert-success">
               {tplFeedback}
             </div>
           )}
@@ -328,13 +329,13 @@ export function TemplatesExercisesTab({
             />
           </div>
 
-          <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="ft-card-subtle space-y-2.5 p-4">
             <div className="flex flex-wrap gap-2">
               <select
                 aria-label="Şablona katalogdan egzersiz seç"
                 value={pickExerciseId}
                 onChange={(e) => setPickExerciseId(e.target.value)}
-                className="min-w-[200px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none"
+                className="ft-input-sm min-w-[200px] flex-1"
               >
                 <option value="">Katalogdan hareket seç...</option>
                 {exercises.map((ex) => (
@@ -347,7 +348,7 @@ export function TemplatesExercisesTab({
                 type="button"
                 disabled={!pickExerciseId}
                 onClick={addCatalogToTemplate}
-                className="rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25 disabled:opacity-40"
+                className="ft-btn-secondary border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
               >
                 + Şablona Ekle
               </button>
@@ -361,13 +362,13 @@ export function TemplatesExercisesTab({
                 placeholder="Veya serbest hareket yaz..."
                 value={freeMoveName}
                 onChange={(e) => setFreeMoveName(e.target.value)}
-                className="min-w-[200px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                className="ft-input-sm min-w-[200px] flex-1"
               />
               <button
                 type="button"
                 disabled={!freeMoveName.trim()}
                 onClick={addFreeToTemplate}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-emerald-500/60 hover:text-emerald-300 disabled:opacity-40"
+                className="ft-btn-secondary"
               >
                 Serbest Ekle
               </button>
@@ -378,9 +379,9 @@ export function TemplatesExercisesTab({
                 {tplExercises.map((ex) => (
                   <li
                     key={ex.key}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-xs"
                   >
-                    <span className="font-medium text-white">{ex.exerciseName}</span>
+                    <span className="font-semibold text-ink">{ex.exerciseName}</span>
                     <div className="flex flex-wrap items-center gap-2">
                       <input
                         type="number"
@@ -395,9 +396,9 @@ export function TemplatesExercisesTab({
                             ),
                           )
                         }
-                        className="w-14 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                        className="ft-input-sm w-14 py-1"
                       />
-                      <span className="text-slate-400">set ×</span>
+                      <span className="text-ink-muted">set ×</span>
                       <input
                         type="number"
                         min="1"
@@ -411,9 +412,9 @@ export function TemplatesExercisesTab({
                             ),
                           )
                         }
-                        className="w-16 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                        className="ft-input-sm w-16 py-1"
                       />
-                      <span className="text-slate-400">tk</span>
+                      <span className="text-ink-muted">tk</span>
                       <input
                         type="number"
                         min="0"
@@ -431,14 +432,14 @@ export function TemplatesExercisesTab({
                             ),
                           )
                         }
-                        className="w-20 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                        className="ft-input-sm w-20 py-1"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           setTplExercises((prev) => prev.filter((item) => item.key !== ex.key))
                         }
-                        className="text-slate-400 hover:text-rose-400"
+                        className="text-ink-muted transition hover:text-rose-500"
                       >
                         Kaldır
                       </button>
@@ -450,19 +451,11 @@ export function TemplatesExercisesTab({
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={tplSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-            >
+            <button type="submit" disabled={tplSaving} className="ft-btn-primary">
               {tplSaving ? 'Kaydediliyor...' : editingTplId ? 'Şablonu Güncelle' : 'Şablon Kaydet'}
             </button>
             {editingTplId && (
-              <button
-                type="button"
-                onClick={resetTemplateForm}
-                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-slate-500"
-              >
+              <button type="button" onClick={resetTemplateForm} className="ft-btn-ghost text-sm">
                 İptal
               </button>
             )}
@@ -470,22 +463,22 @@ export function TemplatesExercisesTab({
         </form>
 
         {templates.length === 0 ? (
-          <p className="border-t border-slate-800 pt-4 text-xs text-slate-400">
+          <p className="border-t border-line pt-4 text-xs text-ink-muted">
             Henüz kayıtlı şablon yok.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-800 border-t border-slate-800 pt-2">
+          <ul className="divide-y divide-line border-t border-line pt-2">
             {templates.map((tpl) => (
               <li key={tpl.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">{tpl.name}</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+                    <span className="font-semibold text-ink">{tpl.name}</span>
+                    <span className="rounded-full bg-elevated px-2 py-0.5 text-[11px] text-ink-secondary">
                       {tpl.exercises.length} hareket
                     </span>
                   </div>
-                  {tpl.description && <p className="text-xs text-slate-400">{tpl.description}</p>}
-                  <p className="text-xs text-slate-400">
+                  {tpl.description && <p className="text-xs text-ink-muted">{tpl.description}</p>}
+                  <p className="text-xs text-ink-muted">
                     {tpl.exercises
                       .map((ex) => `${ex.exerciseName} (${ex.defaultSets}×${ex.defaultReps})`)
                       .join(' · ')}
@@ -495,21 +488,21 @@ export function TemplatesExercisesTab({
                   <button
                     type="button"
                     onClick={() => onStartWorkoutFromTemplate(tpl)}
-                    className="rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25"
+                    className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-500/25 dark:text-emerald-300"
                   >
                     Antrenmana Aktar
                   </button>
                   <button
                     type="button"
                     onClick={() => startEditTemplate(tpl)}
-                    className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 hover:border-emerald-500/60"
+                    className="ft-btn-secondary py-1.5"
                   >
                     Düzenle
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleDeleteTemplate(tpl.id)}
-                    className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 hover:border-rose-500/60 hover:text-rose-300"
+                    className="ft-btn-danger py-1.5"
                   >
                     Sil
                   </button>
@@ -521,25 +514,25 @@ export function TemplatesExercisesTab({
       </section>
 
       {/* Egzersiz Kütüphanesi */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-5">
+      <section className="ft-card space-y-5 p-5 sm:p-6">
         <div>
-          <h2 className="text-base font-semibold text-white">Egzersiz Kütüphanesi</h2>
-          <p className="mt-0.5 text-xs text-slate-400">
+          <h2 className="text-base font-semibold text-ink">Egzersiz Kütüphanesi</h2>
+          <p className="mt-0.5 text-xs text-ink-muted">
             Kas bölgelerine göre hazır egzersizlere göz at veya kendi özel egzersizlerini ekle.
           </p>
         </div>
 
-        <form onSubmit={handleExerciseSubmit} noValidate className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+        <form onSubmit={handleExerciseSubmit} noValidate className="ft-card-subtle space-y-3 p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-secondary">
             {editingExId ? 'Özel Egzersizi Düzenle' : 'Yeni Özel Egzersiz Ekle'}
           </h3>
           {exError && (
-            <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+            <div role="alert" className="ft-alert-error text-xs">
               {exError}
             </div>
           )}
           {exFeedback && (
-            <div role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+            <div role="status" className="ft-alert-success text-xs">
               {exFeedback}
             </div>
           )}
@@ -554,14 +547,14 @@ export function TemplatesExercisesTab({
               onChange={(e) => setExName(e.target.value)}
             />
             <div className="space-y-1.5">
-              <label htmlFor="custom-ex-muscle" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="custom-ex-muscle" className="block text-xs font-semibold text-ink-secondary">
                 Kas Bölgesi
               </label>
               <select
                 id="custom-ex-muscle"
                 value={exMuscle}
                 onChange={(e) => setExMuscle(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                className="ft-input"
               >
                 {muscleGroups.map((mg) => (
                   <option key={mg} value={mg}>
@@ -582,29 +575,21 @@ export function TemplatesExercisesTab({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="inline-flex items-center gap-2 text-xs text-slate-300">
+            <label className="inline-flex items-center gap-2 text-xs text-ink-secondary">
               <input
                 type="checkbox"
                 checked={exBodyweight}
                 onChange={(e) => setExBodyweight(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500"
+                className="h-4 w-4 rounded accent-emerald-500"
               />
               Vücut ağırlığı hareketi
             </label>
             <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={exSaving}
-                className="rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-60"
-              >
+              <button type="submit" disabled={exSaving} className="ft-btn-primary py-2 text-xs">
                 {exSaving ? 'Kaydediliyor...' : editingExId ? 'Güncelle' : 'Özel Egzersiz Ekle'}
               </button>
               {editingExId && (
-                <button
-                  type="button"
-                  onClick={resetExerciseForm}
-                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300"
-                >
+                <button type="button" onClick={resetExerciseForm} className="ft-btn-ghost py-2">
                   İptal
                 </button>
               )}
@@ -619,13 +604,13 @@ export function TemplatesExercisesTab({
             placeholder="Egzersiz ara..."
             value={exQuery}
             onChange={(e) => setExQuery(e.target.value)}
-            className="min-w-[180px] flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+            className="ft-input-sm min-w-[180px] flex-1"
           />
           <select
             aria-label="Kütüphane kas bölgesi filtresi"
             value={exMuscleFilter}
             onChange={(e) => setExMuscleFilter(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+            className="ft-input-sm"
           >
             <option value="">Tüm Kaslar</option>
             {muscleGroups.map((mg) => (
@@ -634,7 +619,7 @@ export function TemplatesExercisesTab({
               </option>
             ))}
           </select>
-          <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950 p-1 text-xs">
+          <div className="flex items-center gap-1 rounded-xl border border-line bg-subtle p-1 text-xs">
             {(
               [
                 ['all', 'Tümü'],
@@ -646,8 +631,10 @@ export function TemplatesExercisesTab({
                 key={key}
                 type="button"
                 onClick={() => setExScope(key)}
-                className={`rounded px-2.5 py-1 font-medium ${
-                  exScope === key ? 'bg-emerald-500 text-slate-950' : 'text-slate-300 hover:text-white'
+                className={`rounded-lg px-2.5 py-1 font-semibold transition ${
+                  exScope === key
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'text-ink-secondary hover:text-ink'
                 }`}
               >
                 {label}
@@ -656,24 +643,24 @@ export function TemplatesExercisesTab({
           </div>
         </div>
 
-        <p className="text-xs text-slate-400">{filteredExercises.length} egzersiz listeleniyor</p>
+        <p className="text-xs text-ink-muted">{filteredExercises.length} egzersiz listeleniyor</p>
 
         <ul className="grid gap-2 sm:grid-cols-2">
           {filteredExercises.map((ex) => (
             <li
               key={ex.id}
-              className="flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-xs"
+              className="ft-card-subtle flex items-center justify-between gap-2 px-3.5 py-2.5 text-xs"
             >
               <div>
-                <p className="font-semibold text-white">{ex.name}</p>
-                <p className="text-slate-400">
+                <p className="font-semibold text-ink">{ex.name}</p>
+                <p className="text-ink-muted">
                   {ex.muscleGroup}
                   {ex.equipment ? ` · ${ex.equipment}` : ''}
                   {ex.isBodyweight ? ' · Vücut Ağırlığı' : ''}
                 </p>
               </div>
               {ex.isCore ? (
-                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                <span className="rounded-full bg-elevated px-2 py-0.5 text-[10px] font-medium text-ink-muted">
                   Hazır
                 </span>
               ) : (
@@ -681,14 +668,14 @@ export function TemplatesExercisesTab({
                   <button
                     type="button"
                     onClick={() => startEditExercise(ex)}
-                    className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:border-emerald-500/60"
+                    className="ft-btn-secondary px-2 py-1 text-[11px]"
                   >
                     Düzenle
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleDeleteExercise(ex.id)}
-                    className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:border-rose-500/60 hover:text-rose-300"
+                    className="ft-btn-danger px-2 py-1 text-[11px]"
                   >
                     Sil
                   </button>

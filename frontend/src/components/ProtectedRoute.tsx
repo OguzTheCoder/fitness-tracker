@@ -7,7 +7,7 @@ export function ProtectedRoute() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-300">
+      <main className="flex min-h-screen items-center justify-center bg-canvas text-sm text-ink-muted">
         Oturum doğrulanıyor...
       </main>
     );

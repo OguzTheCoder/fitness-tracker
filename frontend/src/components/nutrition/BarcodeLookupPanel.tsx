@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Camera, CameraOff, Plus, Search } from 'lucide-react';
 import { ApiError } from '../../services/api';
 import {
   foodService,
@@ -26,19 +27,19 @@ const SOURCE_BADGES: Record<BarcodeLookupResponse['source'], { label: string; cl
   {
     local: {
       label: 'Yerel Önbellek',
-      className: 'bg-emerald-500/15 text-emerald-300',
+      className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
     },
     core: {
       label: 'Temel Besin',
-      className: 'bg-slate-800 text-slate-200',
+      className: 'bg-elevated text-ink-secondary',
     },
     open_food_facts: {
       label: 'Open Food Facts · Kaydedildi',
-      className: 'bg-sky-500/15 text-sky-300',
+      className: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
     },
     not_found: {
       label: 'Bulunamadı',
-      className: 'bg-amber-500/15 text-amber-300',
+      className: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
     },
   };
 
@@ -119,7 +120,6 @@ export function BarcodeLookupPanel({
     }
 
     setCameraActive(true);
-    // Video elementi mount edildikten sonra başlat
     window.requestAnimationFrame(async () => {
       const videoEl = videoRef.current;
       if (!videoEl) {
@@ -189,79 +189,54 @@ export function BarcodeLookupPanel({
       : 0;
 
   return (
-    <section
-      aria-label="Barkod ve QR Okuyucu"
-      className="rounded-2xl border border-emerald-500/30 bg-slate-900/80 p-5 space-y-4"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-semibold text-white">Barkod / QR ile Hızlı Ürün Bul</h2>
-          <p className="text-xs text-slate-400">
-            Önce yerel kütüphanende aranır; standart barkod yoksa Open Food Facts’ten tek seferlik
-            çekilip kaydedilir.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            stopCamera();
-            onClose();
-          }}
-          className="rounded-lg border border-slate-700 px-2.5 py-1 text-xs text-slate-300 transition hover:border-slate-500 hover:text-white"
-        >
-          Kapat
-        </button>
-      </div>
-
-      {/* Kamera Kontrolü & Elle Giriş */}
-      <div className="grid gap-3 md:grid-cols-[auto_1fr] md:items-end">
+    <section aria-label="Barkod ve QR Okuyucu" className="space-y-4">
+      {/* Kamera & Elle Giriş */}
+      <div className="space-y-3">
         <div>
           {cameraActive ? (
             <button
               type="button"
               onClick={stopCamera}
-              className="w-full rounded-lg border border-rose-500/50 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20"
+              className="ft-btn-danger w-full py-2.5 text-sm"
             >
-              Kamerayı Durdur
+              <CameraOff className="h-4 w-4" aria-hidden="true" />
+              <span>Kamerayı Durdur</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={() => void handleStartCamera()}
-              className="w-full rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25"
+              className="ft-btn-secondary w-full py-2.5 text-sm"
             >
-              Kamerayla Tara
+              <Camera className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+              <span>Kamerayla Tara</span>
             </button>
           )}
         </div>
 
-        <form onSubmit={handleManualSubmit} noValidate className="flex flex-wrap gap-2">
+        <form onSubmit={handleManualSubmit} noValidate className="flex gap-2">
           <input
             aria-label="Barkod veya QR kodu"
             type="text"
             placeholder="Barkod veya QR kodunu elle gir (örn. 8690526012345)"
             value={codeInput}
             onChange={(e) => setCodeInput(e.target.value)}
-            className="min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
+            className="ft-input flex-1 py-2"
           />
           <button
             type="submit"
             disabled={isSearching}
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+            className="ft-btn-primary shrink-0 py-2 text-xs"
           >
-            {isSearching ? 'Aranıyor...' : 'Kodu Ara'}
+            <Search className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{isSearching ? 'Aranıyor...' : 'Kodu Ara'}</span>
           </button>
         </form>
       </div>
 
       {cameraActive && (
-        <div className="overflow-hidden rounded-xl border border-slate-700 bg-black">
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            className="max-h-60 w-full object-cover"
-          />
+        <div className="overflow-hidden rounded-xl border border-line-strong bg-black">
+          <video ref={videoRef} playsInline muted className="max-h-60 w-full object-cover" />
           <p className="bg-slate-950/90 px-3 py-1.5 text-center text-xs text-slate-300">
             Barkod veya QR kodunu kameraya yaklaştır...
           </p>
@@ -269,55 +244,44 @@ export function BarcodeLookupPanel({
       )}
 
       {cameraError && (
-        <div
-          role="status"
-          className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200"
-        >
+        <div role="status" className="ft-alert-warn text-xs">
           {cameraError}
         </div>
       )}
 
       {lookupError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
-        >
+        <div role="alert" className="ft-alert-error text-xs">
           {lookupError}
         </div>
       )}
 
       {logFeedback && (
-        <div
-          role="status"
-          className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"
-        >
+        <div role="status" className="ft-alert-success text-xs">
           {logFeedback}
         </div>
       )}
 
       {/* Bulunan Ürün */}
       {foundFood && result && (
-        <div className="rounded-xl border border-emerald-500/30 bg-slate-950/70 p-4 space-y-3">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-semibold text-white">{foundFood.name}</h3>
-                {foundFood.brand && (
-                  <span className="text-xs text-slate-400">· {foundFood.brand}</span>
-                )}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${SOURCE_BADGES[result.source].className}`}
-                >
-                  {SOURCE_BADGES[result.source].label}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                Kod: <span className="font-mono text-slate-300">{result.barcode}</span> · 100 g:{' '}
-                <strong className="text-emerald-400">{foundFood.caloriesPer100g} kcal</strong> · P:{' '}
-                {foundFood.proteinPer100g}g · K: {foundFood.carbsPer100g}g · Y:{' '}
-                {foundFood.fatPer100g}g
-              </p>
+        <div className="ft-card-subtle space-y-3 border-emerald-500/35 p-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-ink">{foundFood.name}</h3>
+              {foundFood.brand && <span className="text-xs text-ink-muted">· {foundFood.brand}</span>}
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SOURCE_BADGES[result.source].className}`}
+              >
+                {SOURCE_BADGES[result.source].label}
+              </span>
             </div>
+            <p className="text-xs text-ink-muted">
+              Kod: <span className="font-mono text-ink-secondary">{result.barcode}</span> · 100 g:{' '}
+              <strong className="text-emerald-600 dark:text-emerald-400">
+                {foundFood.caloriesPer100g} kcal
+              </strong>{' '}
+              · P: {foundFood.proteinPer100g}g · K: {foundFood.carbsPer100g}g · Y:{' '}
+              {foundFood.fatPer100g}g
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -329,7 +293,7 @@ export function BarcodeLookupPanel({
                 setQuantityMode(next);
                 setAmount(next === 'servings' ? '1' : String(foundFood.servingGrams ?? 100));
               }}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-400"
+              className="ft-input-sm"
             >
               <option value="grams">Gram (g)</option>
               {foundFood.servingGrams && (
@@ -345,17 +309,20 @@ export function BarcodeLookupPanel({
               min="0.1"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-400"
+              className="ft-input-sm w-24"
             />
             <button
               type="button"
               disabled={isLogging}
               onClick={() => void handleQuickLog()}
-              className="rounded-lg bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+              className="ft-btn-primary py-2 text-xs"
             >
-              {isLogging
-                ? 'Ekleniyor...'
-                : `Günlük Kayda Ekle${previewKcal > 0 ? ` (${previewKcal} kcal)` : ''}`}
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>
+                {isLogging
+                  ? 'Ekleniyor...'
+                  : `Günlük Kayda Ekle${previewKcal > 0 ? ` (${previewKcal} kcal)` : ''}`}
+              </span>
             </button>
           </div>
         </div>
@@ -363,31 +330,41 @@ export function BarcodeLookupPanel({
 
       {/* Bulunamayan Kod -> Özel Besine Tanımlama */}
       {result && !result.found && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-amber-200">
-                Bu kod sistemde bulunamadı:{' '}
-                <span className="font-mono text-white">{result.barcode}</span>
-              </p>
-              <p className="mt-0.5 text-xs text-amber-200/80">
-                {result.externalError ??
-                  'Bu barkodu veya QR kodunu kendi özel besinine tanımlayıp sonraki taramalarda tek tıkla kullanabilirsin.'}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                stopCamera();
-                onDefineCustomFood(result.barcode);
-              }}
-              className="rounded-lg bg-emerald-500 px-3.5 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400"
-            >
-              Bu Kodla Yeni Besin Tanımla →
-            </button>
+        <div className="ft-alert-warn space-y-3">
+          <div>
+            <p className="text-sm font-semibold">
+              Bu kod sistemde bulunamadı: <span className="font-mono">{result.barcode}</span>
+            </p>
+            <p className="mt-0.5 text-xs opacity-90">
+              {result.externalError ??
+                'Bu barkodu veya QR kodunu kendi özel besinine tanımlayıp sonraki taramalarda tek tıkla kullanabilirsin.'}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              stopCamera();
+              onDefineCustomFood(result.barcode);
+            }}
+            className="ft-btn-primary text-xs"
+          >
+            Bu Kodla Yeni Besin Tanımla →
+          </button>
         </div>
       )}
+
+      <div className="flex justify-end border-t border-line pt-3">
+        <button
+          type="button"
+          onClick={() => {
+            stopCamera();
+            onClose();
+          }}
+          className="ft-btn-ghost"
+        >
+          Kapat
+        </button>
+      </div>
     </section>
   );
 }

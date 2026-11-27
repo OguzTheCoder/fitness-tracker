@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Plus,
+  ScanBarcode,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+} from 'lucide-react';
 import { ApiError } from '../../services/api';
 import {
   nutritionService,
@@ -9,6 +19,8 @@ import {
   type Recipe,
 } from '../../services/nutritionService';
 import { formatTurkishDate, getTodayIsoDate } from '../../utils/date';
+import { ProgressRing } from '../ui/ProgressRing';
+import { SlideOver } from '../ui/SlideOver';
 import { BarcodeLookupPanel } from './BarcodeLookupPanel';
 
 const MEAL_PRESETS = ['Kahvaltı', 'Öğle', 'Akşam', 'Ara Öğün'];
@@ -16,6 +28,8 @@ const MEAL_PRESETS = ['Kahvaltı', 'Öğle', 'Akşam', 'Ara Öğün'];
 interface DailyNutritionTabProps {
   foods: FoodItem[];
   recipes: Recipe[];
+  initialAction?: 'add' | 'barcode' | null;
+  onConsumeInitialAction?: () => void;
   onCatalogChanged: () => Promise<void>;
   onDefineCustomFood: (barcode: string) => void;
 }
@@ -36,6 +50,8 @@ function clampPercent(value: number, goal: number): number {
 export function DailyNutritionTab({
   foods,
   recipes,
+  initialAction,
+  onConsumeInitialAction,
   onCatalogChanged,
   onDefineCustomFood,
 }: DailyNutritionTabProps) {
@@ -43,6 +59,8 @@ export function DailyNutritionTab({
   const [data, setData] = useState<NutritionLogsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [showBarcodePanel, setShowBarcodePanel] = useState(false);
 
   const [kind, setKind] = useState<'food' | 'recipe'>('food');
@@ -64,6 +82,16 @@ export function DailyNutritionTab({
   const [editGrams, setEditGrams] = useState('');
   const [editMealLabel, setEditMealLabel] = useState('');
   const [busyLogId, setBusyLogId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialAction) return;
+    if (initialAction === 'add') {
+      setAddDrawerOpen(true);
+    } else if (initialAction === 'barcode') {
+      setShowBarcodePanel(true);
+    }
+    onConsumeInitialAction?.();
+  }, [initialAction, onConsumeInitialAction]);
 
   const loadDay = useCallback(async (targetDate: string) => {
     setIsLoading(true);
@@ -190,7 +218,6 @@ export function DailyNutritionTab({
       return;
     }
 
-    // kind === 'recipe'
     const num = Number(recipeAmount);
     if (!selectedRecipeId) {
       setFormError('Lütfen bir tarif seçiniz.');
@@ -275,166 +302,178 @@ export function DailyNutritionTab({
   const goals = data?.goals;
 
   return (
-    <div className="space-y-6">
-      {/* Tarih seçici */}
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <div className="flex items-center gap-2">
+    <div className="space-y-5">
+      {/* Tarih seçici + Hızlı Ekleme Aksiyonları */}
+      <section className="ft-card flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={() => setDate((prev) => shiftIsoDate(prev, -1))}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+            aria-label="Önceki gün"
+            className="ft-btn-secondary px-2.5 py-2"
           >
-            ← Önceki
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
           <input
             aria-label="Beslenme tarihi"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-white outline-none focus:border-emerald-400"
+            className="ft-input w-auto py-1.5 text-sm"
           />
           <button
             type="button"
             onClick={() => setDate((prev) => shiftIsoDate(prev, 1))}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+            aria-label="Sonraki gün"
+            className="ft-btn-secondary px-2.5 py-2"
           >
-            Sonraki →
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => setDate(getTodayIsoDate())}
-            className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+            className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-500/20 dark:text-emerald-300"
           >
             Bugün
           </button>
+          <span className="ml-1 hidden text-xs font-medium text-ink-muted sm:inline">
+            {formatTurkishDate(date)}
+          </span>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-slate-300">{formatTurkishDate(date)}</span>
+
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             aria-expanded={showBarcodePanel}
-            onClick={() => setShowBarcodePanel((prev) => !prev)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              showBarcodePanel
-                ? 'border border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
-                : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
-            }`}
+            onClick={() => setShowBarcodePanel(true)}
+            className="ft-btn-secondary py-2"
           >
-            {showBarcodePanel ? 'Tarayıcıyı Kapat' : 'Barkod / QR Tara'}
+            <ScanBarcode className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <span>Barkod / QR Tara</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFormError(null);
+              setAddDrawerOpen(true);
+            }}
+            className="ft-btn-primary py-2 text-xs"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            <span>Besin / Tarif Ekle</span>
           </button>
         </div>
       </section>
 
-      {showBarcodePanel && (
-        <BarcodeLookupPanel
-          date={date}
-          mealLabel={mealLabel}
-          onLogged={() => loadDay(date)}
-          onFoodCached={onCatalogChanged}
-          onDefineCustomFood={onDefineCustomFood}
-          onClose={() => setShowBarcodePanel(false)}
-        />
+      {feedback && !addDrawerOpen && (
+        <div role="status" className="ft-alert-success">
+          {feedback}
+        </div>
       )}
 
       {loadError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-        >
+        <div role="alert" className="ft-alert-error">
           {loadError}
         </div>
       )}
 
-      {/* Günlük Kalori & Makro Hedef Özeti */}
+      {/* Günlük Kalori Halkası + Makro İlerleme Çubukları */}
       {totals && goals && (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              label: 'Kalori',
-              value: totals.calories,
-              goal: goals.dailyCalorieGoal,
-              unit: 'kcal',
-              barClass: 'bg-emerald-400',
-            },
-            {
-              label: 'Protein',
-              value: totals.proteinG,
-              goal: goals.proteinGoalG,
-              unit: 'g',
-              barClass: 'bg-sky-400',
-            },
-            {
-              label: 'Karbonhidrat',
-              value: totals.carbsG,
-              goal: goals.carbsGoalG,
-              unit: 'g',
-              barClass: 'bg-amber-400',
-            },
-            {
-              label: 'Yağ',
-              value: totals.fatG,
-              goal: goals.fatGoalG,
-              unit: 'g',
-              barClass: 'bg-rose-400',
-            },
-          ].map((card) => {
-            const pct = clampPercent(card.value, card.goal);
-            return (
-              <div
-                key={card.label}
-                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
-              >
-                <div className="flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">{card.label}</span>
-                  <span className="text-xs text-slate-500">
-                    Hedef: {card.goal} {card.unit}
-                  </span>
+        <section className="ft-card grid gap-6 p-5 md:grid-cols-[auto_1fr] md:items-center">
+          <div className="flex items-center gap-4">
+            <ProgressRing
+              value={totals.calories}
+              max={goals.dailyCalorieGoal}
+              size={108}
+              strokeWidth={10}
+              accent="emerald"
+              label="Günlük kalori hedefi"
+              centerText={`${totals.calories}`}
+              centerSubtext="kcal"
+            />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Günlük Kalori
+              </p>
+              <p className="text-2xl font-bold text-ink">{totals.calories} kcal</p>
+              <p className="text-xs text-ink-muted">Hedef: {goals.dailyCalorieGoal} kcal</p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                label: 'Protein',
+                value: totals.proteinG,
+                goal: goals.proteinGoalG,
+                barClass: 'bg-sky-500',
+              },
+              {
+                label: 'Karbonhidrat',
+                value: totals.carbsG,
+                goal: goals.carbsGoalG,
+                barClass: 'bg-amber-500',
+              },
+              {
+                label: 'Yağ',
+                value: totals.fatG,
+                goal: goals.fatGoalG,
+                barClass: 'bg-rose-500',
+              },
+            ].map((macro) => {
+              const pct = clampPercent(macro.value, macro.goal);
+              return (
+                <div key={macro.label} className="ft-card-subtle p-3.5">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs font-semibold text-ink-secondary">{macro.label}</span>
+                    <span className="text-[11px] text-ink-muted">Hedef: {macro.goal} g</span>
+                  </div>
+                  <p className="mt-1 text-lg font-bold text-ink">
+                    {macro.value} <span className="text-xs font-normal text-ink-muted">g</span>
+                  </p>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${macro.barClass}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-                <p className="mt-1.5 text-xl font-bold text-white">
-                  {card.value}{' '}
-                  <span className="text-xs font-normal text-slate-400">{card.unit}</span>
-                </p>
-                <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                  <div className={`h-full ${card.barClass}`} style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </section>
       )}
 
       {/* Görünür Mikro Besinler */}
       {data && (
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <section className="ft-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-sm font-semibold text-white">Görünür Mikro Besinler</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-sm font-semibold text-ink">Görünür Mikro Besinler</h2>
+              <p className="text-xs text-ink-muted">
                 Profilinde seçili vitamin ve minerallerin günlük toplamı
               </p>
             </div>
             <Link
               to="/profile"
-              className="text-xs font-medium text-emerald-400 transition hover:text-emerald-300"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400"
             >
-              Görünürleri düzenle →
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Görünürleri düzenle →</span>
             </Link>
           </div>
           {data.visibleMicronutrients.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-3 text-xs text-ink-muted">
               Profil ayarlarında görünür mikro besin seçilmemiş.
             </p>
           ) : (
-            <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
               {data.visibleMicronutrients.map((micro) => (
-                <div
-                  key={micro.key}
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
-                >
-                  <p className="text-[11px] text-slate-400">{micro.label}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-100">
+                <div key={micro.key} className="ft-card-subtle px-3 py-2.5">
+                  <p className="truncate text-[11px] font-medium text-ink-muted">{micro.label}</p>
+                  <p className="mt-0.5 text-sm font-bold text-ink">
                     {micro.amount}{' '}
-                    <span className="text-xs font-normal text-slate-400">{micro.unit}</span>
+                    <span className="text-xs font-normal text-ink-muted">{micro.unit}</span>
                   </p>
                 </div>
               ))}
@@ -443,269 +482,47 @@ export function DailyNutritionTab({
         </section>
       )}
 
-      {/* Günlük Kayıt Ekleme Formu */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-white">Günlük Kayda Ekle</h2>
-          <div className="flex items-center gap-1.5" role="group" aria-label="Kayıt türü">
-            <button
-              type="button"
-              onClick={() => setKind('food')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                kind === 'food'
-                  ? 'bg-emerald-500 text-slate-950'
-                  : 'border border-slate-700 text-slate-300 hover:text-white'
-              }`}
-            >
-              Besin Ekle
-            </button>
-            <button
-              type="button"
-              onClick={() => setKind('recipe')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                kind === 'recipe'
-                  ? 'bg-emerald-500 text-slate-950'
-                  : 'border border-slate-700 text-slate-300 hover:text-white'
-              }`}
-            >
-              Tarif Ekle
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleAddLog} noValidate className="mt-4 space-y-4">
-          {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
-              {formError}
-            </div>
-          )}
-          {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
-              {feedback}
-            </div>
-          )}
-
-          {/* Opsiyonel öğün etiketi */}
-          <div className="space-y-1.5">
-            <label htmlFor="log-meal-label" className="block text-xs font-medium text-slate-300">
-              Öğün Etiketi (Opsiyonel)
-            </label>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                id="log-meal-label"
-                type="text"
-                maxLength={40}
-                placeholder="Boş bırakılabilir (örn. Kahvaltı)"
-                value={mealLabel}
-                onChange={(e) => setMealLabel(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-              />
-              {MEAL_PRESETS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setMealLabel(mealLabel === preset ? '' : preset)}
-                  className={`rounded-full px-2.5 py-1 text-xs transition ${
-                    mealLabel === preset
-                      ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/50'
-                      : 'border border-slate-700 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {kind === 'food' ? (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <label htmlFor="log-food-search" className="block text-xs font-medium text-slate-300">
-                  Besin Filtrele
-                </label>
-                <input
-                  id="log-food-search"
-                  type="text"
-                  placeholder="Örn. tavuk, yumurta, yulaf..."
-                  value={foodSearch}
-                  onChange={(e) => setFoodSearch(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="log-food-select" className="block text-xs font-medium text-slate-300">
-                  Besin Seç
-                </label>
-                <select
-                  id="log-food-select"
-                  value={selectedFoodId}
-                  onChange={(e) => setSelectedFoodId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                >
-                  {filteredFoods.length === 0 ? (
-                    <option value="">Besin bulunamadı</option>
-                  ) : (
-                    filteredFoods.map((food) => (
-                      <option key={food.id} value={food.id}>
-                        {food.name} ({food.caloriesPer100g} kcal/100g)
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="log-food-amount" className="block text-xs font-medium text-slate-300">
-                  Miktar ({foodMode === 'grams' ? 'Gram' : selectedFood?.servingLabel ?? 'Porsiyon'})
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="log-food-amount"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={foodAmount}
-                    onChange={(e) => setFoodAmount(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                  />
-                  <select
-                    aria-label="Besin ölçü birimi"
-                    value={foodMode}
-                    onChange={(e) => {
-                      const nextMode = e.target.value as 'grams' | 'servings';
-                      setFoodMode(nextMode);
-                      setFoodAmount(nextMode === 'servings' ? '1' : '100');
-                    }}
-                    className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-slate-200 outline-none focus:border-emerald-400"
-                  >
-                    <option value="grams">Gram</option>
-                    <option value="servings">Porsiyon</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          ) : recipes.length === 0 ? (
-            <p className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-400">
-              Henüz kayıtlı tarifin yok. Üstteki <strong>Tarifler</strong> sekmesinden ilk tarifini
-              oluşturabilirsin.
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <label htmlFor="log-recipe-select" className="block text-xs font-medium text-slate-300">
-                  Tarif Seç
-                </label>
-                <select
-                  id="log-recipe-select"
-                  value={selectedRecipeId}
-                  onChange={(e) => setSelectedRecipeId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                >
-                  {recipes.map((recipe) => (
-                    <option key={recipe.id} value={recipe.id}>
-                      {recipe.name} ({recipe.perServing.calories} kcal/porsiyon)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="log-recipe-mode" className="block text-xs font-medium text-slate-300">
-                  Ekleme Yöntemi
-                </label>
-                <select
-                  id="log-recipe-mode"
-                  value={recipeMode}
-                  onChange={(e) => {
-                    const nextMode = e.target.value as 'servings' | 'grams' | 'decompose';
-                    setRecipeMode(nextMode);
-                    setRecipeAmount(nextMode === 'grams' ? String(selectedRecipe?.totalWeightG ?? 200) : '1');
-                  }}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                >
-                  <option value="servings">Porsiyonla Ekle</option>
-                  <option value="grams">Gramla Ekle</option>
-                  <option value="decompose">Malzemelerine Ayrıştırarak Ekle</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="log-recipe-amount" className="block text-xs font-medium text-slate-300">
-                  {recipeMode === 'grams' ? 'Miktar (Gram)' : 'Miktar (Porsiyon)'}
-                </label>
-                <input
-                  id="log-recipe-amount"
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  value={recipeAmount}
-                  onChange={(e) => setRecipeAmount(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
-                />
-              </div>
-            </div>
-          )}
-
-          {preview && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2.5 text-xs text-slate-300">
-              <span>
-                Önizleme ({preview.grams} g):{' '}
-                <strong className="text-emerald-400">{preview.calories} kcal</strong> · P:{' '}
-                {preview.proteinG}g · K: {preview.carbsG}g · Y: {preview.fatG}g
-              </span>
-              <button
-                type="submit"
-                disabled={isSubmitting || (kind === 'recipe' && recipes.length === 0)}
-                className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSubmitting ? 'Ekleniyor...' : 'Kayda Ekle'}
-              </button>
-            </div>
-          )}
-        </form>
-      </section>
-
       {/* Günlük Kayıtlar Listesi */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Günün Kayıtları</h2>
-          <span className="text-xs text-slate-400">{data?.logs.length ?? 0} kayıt</span>
+          <h2 className="text-base font-semibold text-ink">Günün Kayıtları</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {data?.logs.length ?? 0} kayıt
+          </span>
         </div>
 
         {isLoading ? (
-          <p className="py-6 text-center text-sm text-slate-400">Kayıtlar yükleniyor...</p>
+          <p className="py-6 text-center text-sm text-ink-muted">Kayıtlar yükleniyor...</p>
         ) : !data || data.logs.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
-            Bu tarih için henüz beslenme kaydı yok. Yukarıdan besin veya tarif ekleyebilirsin.
-          </p>
+          <div className="rounded-xl border border-dashed border-line-strong bg-subtle px-4 py-8 text-center">
+            <p className="text-sm text-ink-muted">
+              Bu tarih için henüz beslenme kaydı yok. Yukarıdan besin, tarif veya barkod
+              ekleyebilirsin.
+            </p>
+          </div>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {data.logs.map((log) => {
               const isEditing = editingLogId === log.id;
               return (
-                <li key={log.id} className="py-3.5">
+                <li key={log.id} className="py-3.5 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{log.entryName}</span>
+                        <span className="text-sm font-semibold text-ink">{log.entryName}</span>
                         {log.mealLabel && (
-                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+                          <span className="rounded-full border border-line bg-subtle px-2 py-0.5 text-[11px] font-medium text-ink-secondary">
                             {log.mealLabel}
                           </span>
                         )}
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-ink-muted">
                           {log.grams} g{log.servings ? ` (${log.servings} pors.)` : ''}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        <span className="font-semibold text-emerald-400">{log.calories} kcal</span>{' '}
+                      <p className="text-xs text-ink-muted">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {log.calories} kcal
+                        </span>{' '}
                         · P: {log.proteinG}g · K: {log.carbsG}g · Y: {log.fatG}g
                       </p>
                     </div>
@@ -715,57 +532,61 @@ export function DailyNutritionTab({
                         <button
                           type="button"
                           onClick={() => startEditLog(log)}
-                          className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+                          className="ft-btn-secondary py-1.5"
                         >
-                          Düzenle
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>Düzenle</span>
                         </button>
                       )}
                       <button
                         type="button"
                         disabled={busyLogId === log.id}
                         onClick={() => void handleDeleteLog(log.id)}
-                        className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                        className="ft-btn-danger py-1.5"
                       >
-                        Sil
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Sil</span>
                       </button>
                     </div>
                   </div>
 
                   {isEditing && (
-                    <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                    <div className="ft-card-subtle mt-3 flex flex-wrap items-end gap-2 p-3">
                       <div>
-                        <label className="block text-[11px] text-slate-400">Gram</label>
+                        <label className="block text-[11px] font-medium text-ink-muted">Gram</label>
                         <input
                           type="number"
                           step="0.1"
                           min="0.1"
                           value={editGrams}
                           onChange={(e) => setEditGrams(e.target.value)}
-                          className="mt-1 w-28 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white"
+                          className="ft-input-sm mt-1 w-28"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400">Öğün Etiketi</label>
+                        <label className="block text-[11px] font-medium text-ink-muted">
+                          Öğün Etiketi
+                        </label>
                         <input
                           type="text"
                           maxLength={40}
                           value={editMealLabel}
                           onChange={(e) => setEditMealLabel(e.target.value)}
-                          className="mt-1 w-40 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white"
+                          className="ft-input-sm mt-1 w-40"
                         />
                       </div>
                       <button
                         type="button"
                         disabled={busyLogId === log.id}
                         onClick={() => void saveEditLog(log.id)}
-                        className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                        className="ft-btn-primary py-1.5 text-xs"
                       >
                         Kaydet
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingLogId(null)}
-                        className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:text-white"
+                        className="ft-btn-ghost py-1.5"
                       >
                         İptal
                       </button>
@@ -777,6 +598,291 @@ export function DailyNutritionTab({
           </ul>
         )}
       </section>
+
+      {/* Açılır Çekmece / Panel: Günlük Kayda Besin veya Tarif Ekle (Canlı Arama Combobox) */}
+      <SlideOver
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
+        title="Günlük Kayda Ekle"
+        subtitle={`${formatTurkishDate(date)} için besin veya tarif ekle`}
+      >
+        <div className="space-y-4">
+          <div
+            className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-subtle p-1"
+            role="group"
+            aria-label="Kayıt türü"
+          >
+            <button
+              type="button"
+              onClick={() => setKind('food')}
+              className={`rounded-lg py-2 text-xs font-semibold transition ${
+                kind === 'food'
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'text-ink-secondary hover:text-ink'
+              }`}
+            >
+              Besin Ekle
+            </button>
+            <button
+              type="button"
+              onClick={() => setKind('recipe')}
+              className={`rounded-lg py-2 text-xs font-semibold transition ${
+                kind === 'recipe'
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'text-ink-secondary hover:text-ink'
+              }`}
+            >
+              Tarif Ekle
+            </button>
+          </div>
+
+          <form onSubmit={handleAddLog} noValidate className="space-y-4">
+            {formError && (
+              <div role="alert" className="ft-alert-error">
+                {formError}
+              </div>
+            )}
+            {feedback && (
+              <div role="status" className="ft-alert-success">
+                {feedback}
+              </div>
+            )}
+
+            {/* Opsiyonel öğün etiketi */}
+            <div className="space-y-2">
+              <label htmlFor="log-meal-label" className="block text-xs font-semibold text-ink-secondary">
+                Öğün Etiketi (Opsiyonel)
+              </label>
+              <input
+                id="log-meal-label"
+                type="text"
+                maxLength={40}
+                placeholder="Boş bırakılabilir (örn. Kahvaltı)"
+                value={mealLabel}
+                onChange={(e) => setMealLabel(e.target.value)}
+                className="ft-input py-2"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {MEAL_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setMealLabel(mealLabel === preset ? '' : preset)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                      mealLabel === preset
+                        ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/50 dark:text-emerald-300'
+                        : 'border border-line-strong bg-subtle text-ink-muted hover:text-ink'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {kind === 'food' ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label htmlFor="log-food-search" className="block text-xs font-semibold text-ink-secondary">
+                    Besin Ara
+                  </label>
+                  <div className="relative">
+                    <Search
+                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="log-food-search"
+                      type="text"
+                      placeholder="Örn. tavuk, yumurta, yulaf veya barkod..."
+                      value={foodSearch}
+                      onChange={(e) => setFoodSearch(e.target.value)}
+                      className="ft-input py-2 pl-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Canlı aramalı besin listesi (Combobox) */}
+                <div
+                  role="listbox"
+                  aria-label="Besin seçimi"
+                  className="max-h-52 space-y-1.5 overflow-y-auto rounded-xl border border-line bg-subtle p-2"
+                >
+                  {filteredFoods.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-ink-muted">
+                      Aramana uygun besin bulunamadı.
+                    </p>
+                  ) : (
+                    filteredFoods.slice(0, 30).map((food) => {
+                      const isSelected = food.id === selectedFoodId;
+                      return (
+                        <button
+                          key={food.id}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => setSelectedFoodId(food.id)}
+                          className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left transition ${
+                            isSelected
+                              ? 'border-emerald-500/60 bg-emerald-500/12 text-ink'
+                              : 'border-transparent bg-surface text-ink-secondary hover:border-line-strong'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-ink">{food.name}</p>
+                            <p className="truncate text-[11px] text-ink-muted">
+                              {food.brand ? `${food.brand} · ` : ''}P:{food.proteinPer100g}g · K:
+                              {food.carbsPer100g}g · Y:{food.fatPer100g}g
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            {food.caloriesPer100g} kcal
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="log-food-amount" className="block text-xs font-semibold text-ink-secondary">
+                    Miktar ({foodMode === 'grams' ? 'Gram' : selectedFood?.servingLabel ?? 'Porsiyon'})
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="log-food-amount"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={foodAmount}
+                      onChange={(e) => setFoodAmount(e.target.value)}
+                      className="ft-input py-2"
+                    />
+                    <select
+                      aria-label="Besin ölçü birimi"
+                      value={foodMode}
+                      onChange={(e) => {
+                        const nextMode = e.target.value as 'grams' | 'servings';
+                        setFoodMode(nextMode);
+                        setFoodAmount(nextMode === 'servings' ? '1' : '100');
+                      }}
+                      className="ft-input w-32 py-2 text-xs"
+                    >
+                      <option value="grams">Gram</option>
+                      <option value="servings">Porsiyon</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ) : recipes.length === 0 ? (
+              <p className="ft-card-subtle p-4 text-xs text-ink-muted">
+                Henüz kayıtlı tarifin yok. Üstteki <strong>Tarifler</strong> sekmesinden ilk
+                tarifini oluşturabilirsin.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label htmlFor="log-recipe-select" className="block text-xs font-semibold text-ink-secondary">
+                    Tarif Seç
+                  </label>
+                  <select
+                    id="log-recipe-select"
+                    value={selectedRecipeId}
+                    onChange={(e) => setSelectedRecipeId(e.target.value)}
+                    className="ft-input py-2"
+                  >
+                    {recipes.map((recipe) => (
+                      <option key={recipe.id} value={recipe.id}>
+                        {recipe.name} ({recipe.perServing.calories} kcal/porsiyon)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="log-recipe-mode" className="block text-xs font-semibold text-ink-secondary">
+                    Ekleme Yöntemi
+                  </label>
+                  <select
+                    id="log-recipe-mode"
+                    value={recipeMode}
+                    onChange={(e) => {
+                      const nextMode = e.target.value as 'servings' | 'grams' | 'decompose';
+                      setRecipeMode(nextMode);
+                      setRecipeAmount(
+                        nextMode === 'grams' ? String(selectedRecipe?.totalWeightG ?? 200) : '1',
+                      );
+                    }}
+                    className="ft-input py-2"
+                  >
+                    <option value="servings">Porsiyonla Ekle</option>
+                    <option value="grams">Gramla Ekle</option>
+                    <option value="decompose">Malzemelerine Ayrıştırarak Ekle</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="log-recipe-amount" className="block text-xs font-semibold text-ink-secondary">
+                    {recipeMode === 'grams' ? 'Miktar (Gram)' : 'Miktar (Porsiyon)'}
+                  </label>
+                  <input
+                    id="log-recipe-amount"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    value={recipeAmount}
+                    onChange={(e) => setRecipeAmount(e.target.value)}
+                    className="ft-input py-2"
+                  />
+                </div>
+              </div>
+            )}
+
+            {preview && (
+              <div className="ft-card-subtle space-y-3 p-3.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-ink-muted">Önizleme ({preview.grams} g)</span>
+                  <strong className="text-sm text-emerald-600 dark:text-emerald-400">
+                    {preview.calories} kcal
+                  </strong>
+                </div>
+                <p className="text-xs text-ink-muted">
+                  P: <strong className="text-ink">{preview.proteinG}g</strong> · K:{' '}
+                  <strong className="text-ink">{preview.carbsG}g</strong> · Y:{' '}
+                  <strong className="text-ink">{preview.fatG}g</strong>
+                </p>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || (kind === 'recipe' && recipes.length === 0)}
+                  className="ft-btn-primary w-full"
+                >
+                  {isSubmitting ? 'Ekleniyor...' : 'Kayda Ekle'}
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
+      </SlideOver>
+
+      {/* Barkod / QR Çekmecesi */}
+      <SlideOver
+        open={showBarcodePanel}
+        onClose={() => setShowBarcodePanel(false)}
+        title="Barkod / QR ile Hızlı Ürün Bul"
+        subtitle="Önce yerel kütüphanende aranır; standart barkod yoksa Open Food Facts’ten tek seferlik çekilir."
+      >
+        <BarcodeLookupPanel
+          date={date}
+          mealLabel={mealLabel}
+          onLogged={() => loadDay(date)}
+          onFoodCached={onCatalogChanged}
+          onDefineCustomFood={(code) => {
+            setShowBarcodePanel(false);
+            onDefineCustomFood(code);
+          }}
+          onClose={() => setShowBarcodePanel(false)}
+        />
+      </SlideOver>
     </div>
   );
 }

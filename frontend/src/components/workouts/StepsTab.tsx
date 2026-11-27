@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DateRangeFilter } from '../DateRangeFilter';
 import { FormField } from '../FormField';
+import { ProgressRing } from '../ui/ProgressRing';
 import { ApiError } from '../../services/api';
 import { stepService, type StepEntry, type StepSummary } from '../../services/workoutService';
 import { formatTurkishDate, getTodayIsoDate, type DateRange } from '../../utils/date';
@@ -127,60 +128,73 @@ export function StepsTab() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-medium text-slate-400">Bugünkü Adım İlerlemesi</p>
-            <p className="mt-1 text-2xl font-bold text-white">
+      <section className="ft-card flex flex-wrap items-center justify-between gap-5 p-5">
+        <div className="flex items-center gap-4">
+          <ProgressRing
+            value={summary.todaySteps}
+            max={summary.dailyStepGoal}
+            size={96}
+            strokeWidth={9}
+            accent="emerald"
+            label="Bugünkü adım ilerlemesi"
+            centerText={`%${summary.todayProgressPercent}`}
+            centerSubtext="hedef"
+          />
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              Bugünkü Adım İlerlemesi
+            </p>
+            <p className="text-2xl font-bold text-ink">
               {summary.todaySteps.toLocaleString('tr-TR')}{' '}
-              <span className="text-sm font-normal text-slate-400">
+              <span className="text-sm font-normal text-ink-muted">
                 / {summary.dailyStepGoal.toLocaleString('tr-TR')} adım
               </span>
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3 text-xs">
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-              <span className="text-slate-400">Günlük Ort: </span>
-              <span className="font-semibold text-slate-200">
-                {summary.averageDailySteps.toLocaleString('tr-TR')}
-              </span>
+            <div className="h-2 w-48 overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all"
+                style={{ width: `${barPercent}%` }}
+              />
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-              <span className="text-slate-400">Hedef Tutulan: </span>
-              <span className="font-semibold text-emerald-400">
-                {summary.goalMetDays} / {summary.daysLogged} gün
-              </span>
-            </div>
+            <p className="text-xs text-ink-muted">
+              %{summary.todayProgressPercent} tamamlandı · Günlük hedefi Profil sayfasından
+              değiştirebilirsin.
+            </p>
           </div>
         </div>
 
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
-            style={{ width: `${barPercent}%` }}
-          />
+        <div className="flex flex-wrap gap-3 text-xs">
+          <div className="ft-card-subtle px-3.5 py-2.5">
+            <span className="block text-ink-muted">Günlük Ort</span>
+            <span className="mt-0.5 block text-base font-bold text-ink">
+              {summary.averageDailySteps.toLocaleString('tr-TR')}
+            </span>
+          </div>
+          <div className="ft-card-subtle px-3.5 py-2.5">
+            <span className="block text-ink-muted">Hedef Tutulan</span>
+            <span className="mt-0.5 block text-base font-bold text-emerald-600 dark:text-emerald-400">
+              {summary.goalMetDays} / {summary.daysLogged} gün
+            </span>
+          </div>
         </div>
-        <p className="text-xs text-slate-400">
-          %{summary.todayProgressPercent} tamamlandı · Günlük hedefi Profil sayfasından değiştirebilirsin.
-        </p>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h2 className="text-base font-semibold text-white">
+      <section className="ft-card p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-ink">
           {editingId ? 'Adım Kaydını Düzenle' : 'Günlük Adım Gir / Güncelle'}
         </h2>
-        <p className="mt-0.5 text-xs text-slate-400">
+        <p className="mt-0.5 text-xs text-ink-muted">
           Aynı tarih için tekrar giriş yaptığında o günün adım sayısı otomatik güncellenir.
         </p>
 
         <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           {formError && (
-            <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300">
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
@@ -216,19 +230,11 @@ export function StepsTab() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-            >
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
               {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Adım Kaydet'}
             </button>
             {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:border-slate-500"
-              >
+              <button type="button" onClick={resetForm} className="ft-btn-ghost text-sm">
                 İptal
               </button>
             )}
@@ -238,26 +244,28 @@ export function StepsTab() {
 
       <DateRangeFilter value={range} onApply={setRange} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Adım Geçmişi</h2>
-          <span className="text-xs text-slate-400">{entries.length} gün</span>
+          <h2 className="text-base font-semibold text-ink">Adım Geçmişi</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {entries.length} gün
+          </span>
         </div>
 
         {listError && (
-          <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          <div role="alert" className="ft-alert-error">
             {listError}
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-8 text-center text-sm text-slate-400">Adım kayıtları yükleniyor...</p>
+          <p className="py-8 text-center text-sm text-ink-muted">Adım kayıtları yükleniyor...</p>
         ) : entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-ink-muted">
             Henüz günlük adım kaydı eklenmemiş.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {entries.map((entry) => {
               const goalMet = entry.steps >= summary.dailyStepGoal;
               return (
@@ -267,28 +275,32 @@ export function StepsTab() {
                 >
                   <div className="space-y-0.5">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="text-base font-semibold text-white">
+                      <span className="text-base font-semibold text-ink">
                         {entry.steps.toLocaleString('tr-TR')} adım
                       </span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           goalMet
-                            ? 'bg-emerald-500/15 text-emerald-300'
-                            : 'bg-slate-800 text-slate-300'
+                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-elevated text-ink-secondary'
                         }`}
                       >
-                        {goalMet ? 'Hedef Tamam' : `%${Math.round((entry.steps / summary.dailyStepGoal) * 100)}`}
+                        {goalMet
+                          ? 'Hedef Tamam'
+                          : `%${Math.round((entry.steps / summary.dailyStepGoal) * 100)}`}
                       </span>
-                      <span className="text-sm text-slate-300">{formatTurkishDate(entry.date)}</span>
+                      <span className="text-xs text-ink-muted">
+                        {formatTurkishDate(entry.date)}
+                      </span>
                     </div>
-                    {entry.note && <p className="text-sm text-slate-400">{entry.note}</p>}
+                    {entry.note && <p className="text-xs text-ink-muted">{entry.note}</p>}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => startEdit(entry)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-emerald-500/60 hover:text-emerald-300"
+                      className="ft-btn-secondary py-1.5"
                     >
                       Düzenle
                     </button>
@@ -296,7 +308,7 @@ export function StepsTab() {
                       type="button"
                       disabled={deletingId === entry.id}
                       onClick={() => void handleDelete(entry.id)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                      className="ft-btn-danger py-1.5"
                     >
                       {deletingId === entry.id ? 'Siliniyor...' : 'Sil'}
                     </button>

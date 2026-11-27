@@ -1,9 +1,9 @@
-/* Fitness Tracker Secure App-Shell Service Worker (v1.5.0)
+/* Fitness Tracker Secure App-Shell Service Worker (v2.0.0)
  * Security invariant: NEVER cache /api/* responses, cross-origin requests,
  * non-GET requests, or any response containing credentials/Set-Cookie headers.
  */
 
-const CACHE_NAME = 'ft-shell-v1.5.0';
+const CACHE_NAME = 'ft-shell-v2.0.0';
 const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ [
   '/',
   '/index.html',

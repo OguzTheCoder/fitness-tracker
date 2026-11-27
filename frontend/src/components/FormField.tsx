@@ -4,26 +4,28 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
   error?: string;
+  hint?: string;
 }
 
-export function FormField({ id, label, error, className = '', ...props }: FormFieldProps) {
+export function FormField({ id, label, error, hint, className = '', ...props }: FormFieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-200">
+      <label htmlFor={id} className="block text-xs font-semibold text-ink-secondary">
         {label}
       </label>
       <input
         id={id}
         aria-invalid={Boolean(error)}
-        className={`w-full rounded-lg border bg-slate-950/70 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition focus:ring-2 ${
+        className={`ft-input ${
           error
-            ? 'border-rose-500/80 focus:border-rose-400 focus:ring-rose-500/30'
-            : 'border-slate-700 focus:border-emerald-400 focus:ring-emerald-500/30'
+            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/25'
+            : ''
         } ${className}`}
         {...props}
       />
+      {hint && !error && <p className="text-[11px] text-ink-muted">{hint}</p>}
       {error && (
-        <p role="alert" className="text-xs text-rose-400">
+        <p role="alert" className="text-xs font-medium text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}

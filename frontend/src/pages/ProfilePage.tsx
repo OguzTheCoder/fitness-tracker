@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DatabaseBackup, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react';
 import { BackupSection } from '../components/BackupSection';
 import { FormField } from '../components/FormField';
 import { useAuth } from '../context/AuthContext';
@@ -175,7 +176,7 @@ export function ProfilePage() {
 
   if (isLoading) {
     return (
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300">
+      <section className="ft-card p-6 text-sm text-ink-muted">
         Profil yükleniyor...
       </section>
     );
@@ -183,44 +184,58 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h1 className="text-2xl font-bold text-white">Profil ve Günlük Hedefler</h1>
-        <p className="mt-1 text-sm text-slate-400">
+      <section className="ft-card p-5 sm:p-6">
+        <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+          Profil ve Günlük Hedefler
+        </h1>
+        <p className="mt-1 text-xs text-ink-muted sm:text-sm">
           Adını, gram bazlı kalori/makro hedeflerini, günlük adım hedefini ve takip etmek istediğin
           mikro besinleri düzenle.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3.5 text-xs">
+          <a href="#profile-goals" className="ft-btn-secondary py-1.5">
+            <Target className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+            <span>Hedefler</span>
+          </a>
+          <a href="#profile-micros" className="ft-btn-secondary py-1.5">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-sky-500" aria-hidden="true" />
+            <span>Mikro Besinler</span>
+          </a>
+          <a href="#backup-section-title" className="ft-btn-secondary py-1.5">
+            <DatabaseBackup className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+            <span>Yedekleme</span>
+          </a>
+          <a href="#profile-security" className="ft-btn-secondary py-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-rose-500" aria-hidden="true" />
+            <span>Güvenlik</span>
+          </a>
+        </div>
       </section>
 
       {loadError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-        >
+        <div role="alert" className="ft-alert-error">
           {loadError}
         </div>
       )}
 
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {saveError && (
-          <div
-            role="alert"
-            className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-          >
+          <div role="alert" className="ft-alert-error">
             {saveError}
           </div>
         )}
 
         {feedback && (
-          <div
-            role="status"
-            className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-          >
+          <div role="status" className="ft-alert-success">
             {feedback}
           </div>
         )}
 
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-          <h2 className="text-lg font-semibold text-white">Temel Bilgiler & Hedefler</h2>
+        <section id="profile-goals" className="ft-card space-y-4 p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <h2 className="text-base font-semibold text-ink">Temel Bilgiler & Hedefler</h2>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FormField
               id="profile-name"
@@ -284,18 +299,18 @@ export function ProfilePage() {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+        <section id="profile-micros" className="ft-card space-y-4 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-white">Görünür Mikro Besinler</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-semibold text-ink">Görünür Mikro Besinler</h2>
+              <p className="text-xs text-ink-muted">
                 Seçili: {visibleMicronutrients.length} mikro besin
               </p>
             </div>
             <button
               type="button"
               onClick={() => setVisibleMicronutrients(DEFAULT_MINERAL_KEYS)}
-              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+              className="ft-btn-secondary py-1.5"
             >
               Varsayılan 6 Mineral
             </button>
@@ -307,7 +322,7 @@ export function ProfilePage() {
               { title: 'Vitaminler', items: groupedMicronutrients.vitamins },
             ].map((group) => (
               <div key={group.title} className="space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   {group.title}
                 </h3>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -316,10 +331,10 @@ export function ProfilePage() {
                     return (
                       <label
                         key={item.key}
-                        className={`flex cursor-pointer items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
+                        className={`flex cursor-pointer items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
                           checked
-                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-200'
-                            : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700'
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
+                            : 'border-line bg-subtle text-ink-secondary hover:border-line-strong'
                         }`}
                       >
                         <span className="flex items-center gap-2">
@@ -331,7 +346,7 @@ export function ProfilePage() {
                           />
                           <span>{item.label}</span>
                         </span>
-                        <span className="text-xs text-slate-400">{item.unit}</span>
+                        <span className="text-xs text-ink-muted">{item.unit}</span>
                       </label>
                     );
                   })}
@@ -342,11 +357,7 @@ export function ProfilePage() {
         </section>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <button type="submit" disabled={isSaving} className="ft-btn-primary">
             {isSaving ? 'Kaydediliyor...' : 'Profili Kaydet'}
           </button>
         </div>
@@ -354,12 +365,18 @@ export function ProfilePage() {
 
       <BackupSection onProfileRestored={loadProfile} />
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section
+        id="profile-security"
+        className="ft-card flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6"
+      >
         <div>
-          <h2 className="text-base font-semibold text-white">Oturum & Güvenlik</h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+            <ShieldCheck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <span>Oturum & Güvenlik</span>
+          </h2>
+          <p className="mt-1 text-xs text-ink-muted">
             Erişim modu:{' '}
-            <span className="font-medium text-slate-200">
+            <span className="font-semibold text-ink-secondary">
               {accessMode === 'pin' ? 'Kişisel PIN Kilidi' : 'Yerel Mod'}
             </span>{' '}
             · Oturum güvenli HttpOnly çerez ile korunur.
@@ -369,7 +386,7 @@ export function ProfilePage() {
           type="button"
           onClick={() => void handleLogoutAll()}
           disabled={isRevoking}
-          className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="ft-btn-danger"
         >
           {isRevoking ? 'Sonlandırılıyor...' : 'Tüm Cihazlardan Çıkış Yap'}
         </button>

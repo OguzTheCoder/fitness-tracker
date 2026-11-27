@@ -3,14 +3,13 @@
 > **Kurallar:** Projenin giriş noktasıdır; **her adımdan sonra güncellenir**. Yalnızca güncel durum ve sıradaki 1–3 adım tutulur; eski işler burada biriktirilmez (biten yapılar [TAMAMLANANLAR.md](./TAMAMLANANLAR.md) içine gider).
 
 ## Neredeyiz?
-- **Faz / Sürüm:** `v1.5.0` (`AUTH-14` — Offline-First Senkron & 0 TL Model B Altyapısı) kodlama ve doğrulama tamamlandı (Backend 64/64, Frontend 41/41 test, `prisma:pg:validate` ve her iki `build` 0 hatayla geçti).
-- **Aktif Branch:** `AUTH-14-offline-sync-model-b`
-- **Son Adım:** Tüm kullanıcı tablolarına `deletedAt` tombstone migration'ı, sağlayıcıdan bağımsız 0 TL Model B PostgreSQL uyumu (`prisma:pg:*`, `TRUST_PROXY`, çoklu `CORS_ORIGIN`, `SERVE_FRONTEND`, `/api/ready`, `.env.example`), atomik delta/Last-Write-Wins `/api/sync` (`1mb` özel limit + hız sınırlayıcı + Zod + sıkı izolasyon), istemci IndexedDB + offline kuyruk + `AppLayout` durum göstergesi ve `/api/*` önbelleklemeyen güvenli PWA altyapısı tamamlandı.
+- **Faz / Sürüm:** `v2.0.0` (`AUTH-15` — Yeni Nesil PC + Mobil PWA Frontend Tasarımı) kodlama ve doğrulama tamamlandı (Backend 64/64, Frontend 46/46 test ve her iki `build` 0 hatayla geçti).
+- **Aktif Branch:** `AUTH-15-v2-frontend-redesign`
+- **Son Adım:** Çift tema (`ThemeContext`), PC Sol Menü (`Sidebar`) + Mobil PWA Alt Menü (`Bottom Bar`), Bento özet + `ProgressRing` + etkileşimli/hedef çizgili `TrendChart`, `SlideOver` çekmeceler (Hızlı Kilo/Adım, Kilo, Beslenme canlı arama `Combobox`, Barkod/QR, Antrenman), minimalist standart formlar, çevrimdışı `lucide-react` ikonları ve `2.0.0` sürüm/SW (`ft-shell-v2.0.0`) güncellemesi tamamlandı; tüm güvenlik ve offline-first kuralları korundu.
 
 ## Sırada Ne Var?
-1. `AUTH-14-offline-sync-model-b` dalını Smart Commit ile gönderip PR üzerinden `main`'e merge etmek ve `v1.5.0` etiketini oluşturmak.
-2. `v2.0.0` (`AUTH-15`+) için yeni nesil PC + mobil PWA görsel tasarım kararlarını netleştirip uygulamaya geçmek.
-3. `v2.0.0` ile birlikte 0 TL Model B canlı yayını ve uçtan uca doğrulamayı tamamlamak.
+1. `AUTH-15-v2-frontend-redesign` dalını Smart Commit ile gönderip GitHub Web PR üzerinden `main`'e merge etmek ve `v2.0.0` etiketini oluşturmak.
+2. 0 TL Model B (ücretsiz PostgreSQL + ücretsiz HTTPS host) canlı yayınını ve PC + mobil PWA kurulum/senkron uçtan uca doğrulamasını yapmak.
 
 ## Ayrıntı Nerede?
 - Plan ve SemVer yol haritası: [KILAVUZ.md](./KILAVUZ.md)
