@@ -18,6 +18,7 @@ export async function listCalorieEntries(userId: string, range: DateRangeQuery) 
   const entries = await prisma.calorieEntry.findMany({
     where: {
       userId,
+      deletedAt: null,
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
@@ -61,7 +62,7 @@ export async function createCalorieEntry(userId: string, input: CalorieEntryInpu
 
 export async function updateCalorieEntry(userId: string, id: string, input: CalorieEntryInput) {
   const existing = await prisma.calorieEntry.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -82,8 +83,9 @@ export async function updateCalorieEntry(userId: string, id: string, input: Calo
 }
 
 export async function deleteCalorieEntry(userId: string, id: string) {
-  const result = await prisma.calorieEntry.deleteMany({
-    where: { id, userId },
+  const result = await prisma.calorieEntry.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

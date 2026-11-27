@@ -1,6 +1,6 @@
 export const BACKUP_SCHEMA_VERSION = 1 as const;
 export const BACKUP_APP_NAME = 'fitness-tracker' as const;
-export const BACKUP_APP_VERSION = '1.4.0' as const;
+export const BACKUP_APP_VERSION = '1.5.0' as const;
 export const BACKUP_IMPORT_MAX_BODY = '5mb';
 
 export const CSV_DATASETS = [

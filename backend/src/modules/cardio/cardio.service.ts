@@ -12,6 +12,7 @@ export async function listCardioEntries(userId: string, query: CardioListQuery) 
   const entries = await prisma.cardioEntry.findMany({
     where: {
       userId,
+      deletedAt: null,
       ...(dateFilter ? { date: dateFilter } : {}),
       ...(query.cardioType ? { cardioType: query.cardioType } : {}),
     },
@@ -56,7 +57,7 @@ export async function createCardioEntry(userId: string, input: CardioEntryInput)
 
 export async function updateCardioEntry(userId: string, id: string, input: CardioEntryInput) {
   const existing = await prisma.cardioEntry.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -80,8 +81,9 @@ export async function updateCardioEntry(userId: string, id: string, input: Cardi
 }
 
 export async function deleteCardioEntry(userId: string, id: string) {
-  const result = await prisma.cardioEntry.deleteMany({
-    where: { id, userId },
+  const result = await prisma.cardioEntry.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

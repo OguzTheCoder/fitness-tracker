@@ -58,30 +58,34 @@ model PasswordResetToken {
 }
 
 model WeightEntry {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date      String
   weightKg  Float
   note      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([userId, date])
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model CalorieEntry {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date      String
   mealName  String
   calories  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model WorkoutEntry {
@@ -96,9 +100,11 @@ model WorkoutEntry {
   note            String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
   exercises       WorkoutExercise[]
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
   @@index([templateId])
 }
 
@@ -115,10 +121,12 @@ model Exercise {
   notes             String?
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
+  deletedAt         DateTime?
   templateExercises WorkoutTemplateExercise[]
   workoutExercises  WorkoutExercise[]
 
   @@index([userId, name])
+  @@index([userId, updatedAt])
   @@index([isCore, muscleGroup])
   @@index([muscleGroup])
 }
@@ -131,10 +139,12 @@ model WorkoutTemplate {
   description String?
   createdAt   DateTime                  @default(now())
   updatedAt   DateTime                  @updatedAt
+  deletedAt   DateTime?
   exercises   WorkoutTemplateExercise[]
   workouts    WorkoutEntry[]
 
   @@index([userId, name])
+  @@index([userId, updatedAt])
 }
 
 model WorkoutTemplateExercise {
@@ -183,33 +193,37 @@ model WorkoutSet {
 }
 
 model CardioEntry {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date            String
   cardioType      String
   durationMinutes Int
   distanceKm      Float?
   caloriesBurned  Int?
   note            String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model StepEntry {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date      String
   steps     Int
   note      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([userId, date])
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }
 
 model Food {
@@ -231,11 +245,13 @@ model Food {
   micronutrientsPer100g String         @default("{}")
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+  deletedAt             DateTime?
   recipeItems           RecipeItem[]
   nutritionLogs         NutritionLog[]
 
   @@unique([userId, barcode])
   @@index([userId, name])
+  @@index([userId, updatedAt])
   @@index([isCore, name])
   @@index([isCore, barcode])
 }
@@ -250,10 +266,12 @@ model Recipe {
   cookedWeightG Float?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
   items         RecipeItem[]
   nutritionLogs NutritionLog[]
 
   @@index([userId, name])
+  @@index([userId, updatedAt])
 }
 
 model RecipeItem {
@@ -270,16 +288,16 @@ model RecipeItem {
 }
 
 model NutritionLog {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   date           String
   mealLabel      String?
   sourceType     String
   foodId         String?
-  food           Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  food           Food?     @relation(fields: [foodId], references: [id], onDelete: SetNull)
   recipeId       String?
-  recipe         Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  recipe         Recipe?   @relation(fields: [recipeId], references: [id], onDelete: SetNull)
   entryName      String
   quantityMode   String
   servings       Float?
@@ -288,9 +306,11 @@ model NutritionLog {
   proteinG       Float
   carbsG         Float
   fatG           Float
-  micronutrients String   @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  micronutrients String    @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   @@index([userId, date])
+  @@index([userId, updatedAt])
 }

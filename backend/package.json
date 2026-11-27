@@ -1,18 +1,23 @@
 {
   "name": "fitness-tracker-backend",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "build:pg": "npm run prisma:pg:generate && tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:pg:prepare": "node scripts/prepare-postgres-schema.mjs",
+    "prisma:pg:validate": "node scripts/prepare-postgres-schema.mjs && prisma validate --schema=prisma/schema.postgres.prisma",
+    "prisma:pg:generate": "node scripts/prepare-postgres-schema.mjs && prisma generate --schema=prisma/schema.postgres.prisma",
+    "prisma:pg:push": "node scripts/prepare-postgres-schema.mjs && prisma db push --schema=prisma/schema.postgres.prisma"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

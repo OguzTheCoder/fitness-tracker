@@ -16,6 +16,7 @@ export async function listWeightEntries(userId: string, range: DateRangeQuery) {
   const entries = await prisma.weightEntry.findMany({
     where: {
       userId,
+      deletedAt: null,
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     orderBy: { date: 'desc' },
@@ -29,7 +30,7 @@ export async function listWeightEntries(userId: string, range: DateRangeQuery) {
 export async function upsertWeightEntry(userId: string, input: WeightEntryInput) {
   const existing = await prisma.weightEntry.findUnique({
     where: { userId_date: { userId, date: input.date } },
-    select: { id: true },
+    select: { id: true, deletedAt: true },
   });
 
   const entry = await prisma.weightEntry.upsert({
@@ -43,15 +44,16 @@ export async function upsertWeightEntry(userId: string, input: WeightEntryInput)
     update: {
       weightKg: input.weightKg,
       note: input.note,
+      deletedAt: null,
     },
   });
 
-  return { entry, updated: Boolean(existing) };
+  return { entry, updated: Boolean(existing && !existing.deletedAt) };
 }
 
 export async function updateWeightEntry(userId: string, id: string, input: WeightEntryInput) {
   const existing = await prisma.weightEntry.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -78,8 +80,9 @@ export async function updateWeightEntry(userId: string, id: string, input: Weigh
 }
 
 export async function deleteWeightEntry(userId: string, id: string) {
-  const result = await prisma.weightEntry.deleteMany({
-    where: { id, userId },
+  const result = await prisma.weightEntry.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

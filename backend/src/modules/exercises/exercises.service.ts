@@ -11,9 +11,9 @@ function normalizeText(value: string): string {
 }
 
 function buildScopeWhere(userId: string, scope: ExerciseListQuery['scope']) {
-  if (scope === 'core') return { isCore: true };
-  if (scope === 'custom') return { userId, isCore: false };
-  return { OR: [{ isCore: true }, { userId }] };
+  if (scope === 'core') return { isCore: true, deletedAt: null };
+  if (scope === 'custom') return { userId, isCore: false, deletedAt: null };
+  return { deletedAt: null, OR: [{ isCore: true }, { userId }] };
 }
 
 export async function listExercises(userId: string, query: ExerciseListQuery) {
@@ -82,7 +82,7 @@ export async function createCustomExercise(userId: string, input: ExerciseBodyIn
 
 export async function updateCustomExercise(userId: string, id: string, input: ExerciseBodyInput) {
   const existing = await prisma.exercise.findFirst({
-    where: { id, userId, isCore: false },
+    where: { id, userId, isCore: false, deletedAt: null },
     select: { id: true },
   });
 
@@ -105,8 +105,9 @@ export async function updateCustomExercise(userId: string, id: string, input: Ex
 }
 
 export async function deleteCustomExercise(userId: string, id: string) {
-  const result = await prisma.exercise.deleteMany({
-    where: { id, userId, isCore: false },
+  const result = await prisma.exercise.updateMany({
+    where: { id, userId, isCore: false, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

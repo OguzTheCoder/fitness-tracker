@@ -22,6 +22,7 @@ export async function listStepEntries(userId: string, range: DateRangeQuery) {
     prisma.stepEntry.findMany({
       where: {
         userId,
+        deletedAt: null,
         ...(dateFilter ? { date: dateFilter } : {}),
       },
       orderBy: { date: 'desc' },
@@ -32,8 +33,8 @@ export async function listStepEntries(userId: string, range: DateRangeQuery) {
       where: { userId },
       select: { dailyStepGoal: true },
     }),
-    prisma.stepEntry.findUnique({
-      where: { userId_date: { userId, date: todayDate } },
+    prisma.stepEntry.findFirst({
+      where: { userId, date: todayDate, deletedAt: null },
       select: { steps: true },
     }),
   ]);
@@ -65,7 +66,7 @@ export async function listStepEntries(userId: string, range: DateRangeQuery) {
 export async function upsertStepEntry(userId: string, input: StepEntryInput) {
   const existing = await prisma.stepEntry.findUnique({
     where: { userId_date: { userId, date: input.date } },
-    select: { id: true },
+    select: { id: true, deletedAt: true },
   });
 
   const entry = await prisma.stepEntry.upsert({
@@ -79,15 +80,16 @@ export async function upsertStepEntry(userId: string, input: StepEntryInput) {
     update: {
       steps: input.steps,
       note: input.note,
+      deletedAt: null,
     },
   });
 
-  return { entry, updated: Boolean(existing) };
+  return { entry, updated: Boolean(existing && !existing.deletedAt) };
 }
 
 export async function updateStepEntry(userId: string, id: string, input: StepEntryInput) {
   const existing = await prisma.stepEntry.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -114,8 +116,9 @@ export async function updateStepEntry(userId: string, id: string, input: StepEnt
 }
 
 export async function deleteStepEntry(userId: string, id: string) {
-  const result = await prisma.stepEntry.deleteMany({
-    where: { id, userId },
+  const result = await prisma.stepEntry.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

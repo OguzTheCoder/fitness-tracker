@@ -12,7 +12,7 @@ interface LoginErrors {
 }
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, authNotice } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = resolveSafeRedirectPath(
@@ -68,6 +68,15 @@ export function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {authNotice && (
+          <div
+            role="status"
+            className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+          >
+            {authNotice}
+          </div>
+        )}
+
         {serverError && (
           <div
             role="alert"

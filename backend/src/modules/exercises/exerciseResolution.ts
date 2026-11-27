@@ -31,6 +31,7 @@ export async function resolveExerciseReferences<T extends ExerciseReferenceInput
     const records = await prisma.exercise.findMany({
       where: {
         id: { in: uniqueIds },
+        deletedAt: null,
         OR: [{ isCore: true }, { userId }],
       },
       select: { id: true, name: true, muscleGroup: true },

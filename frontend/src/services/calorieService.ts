@@ -1,5 +1,12 @@
-import { apiRequest } from './api';
+import {
+  localStore,
+  offlineFirstRead,
+  offlineFirstWrite,
+  removeById,
+  upsertById,
+} from '../offline/localStore';
 import { buildDateRangeQuery, type DateRange } from '../utils/date';
+import { apiRequest } from './api';
 
 export interface CalorieEntry {
   id: string;
@@ -25,25 +32,57 @@ export interface CalorieEntryPayload {
 
 export const calorieService = {
   list: (range?: DateRange) =>
-    apiRequest<{ entries: CalorieEntry[]; dailyTotals: DailyCalorieTotal[] }>(
-      `/calories${buildDateRangeQuery(range)}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{ entries: CalorieEntry[]; dailyTotals: DailyCalorieTotal[] }>(
+          `/calories${buildDateRangeQuery(range)}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        if (!range?.from && !range?.to) {
+          data.calories = res.entries;
+        } else {
+          for (const e of res.entries) data.calories = upsertById(data.calories, e);
+        }
+      },
+      (data) => localStore.calories.list(data, range),
     ),
 
   create: (payload: CalorieEntryPayload) =>
-    apiRequest<{ entry: CalorieEntry }>('/calories', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: CalorieEntry }>('/calories', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.calories = upsertById(data.calories, res.entry);
+      },
+      (userId, data) => localStore.calories.create(userId, data, payload),
+    ),
 
   update: (id: string, payload: CalorieEntryPayload) =>
-    apiRequest<{ entry: CalorieEntry }>(`/calories/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: CalorieEntry }>(`/calories/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.calories = upsertById(data.calories, res.entry);
+      },
+      (userId, data) => localStore.calories.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/calories/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/calories/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.calories = removeById(data.calories, id);
+      },
+      (userId, data) => localStore.calories.remove(userId, data, id),
+    ),
 };

@@ -17,6 +17,7 @@ export function AccessPage() {
     isConfigured,
     isAuthenticated,
     isLoading,
+    authNotice,
     setupAccess,
     unlockWithPin,
     resumeLocalSession,
@@ -124,6 +125,15 @@ export function AccessPage() {
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {authNotice && (
+          <div
+            role="status"
+            className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+          >
+            {authNotice}
+          </div>
+        )}
+
         {serverError && (
           <div
             role="alert"

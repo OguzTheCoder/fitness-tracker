@@ -96,6 +96,7 @@ async function assertAccessibleFoods(userId: string, foodIds: string[]) {
   const found = await prisma.food.findMany({
     where: {
       id: { in: uniqueIds },
+      deletedAt: null,
       OR: [{ isCore: true }, { userId }],
     },
     select: { id: true },
@@ -117,7 +118,7 @@ export async function listRecipes(userId: string, query: RecipeListQuery) {
   if (query.q) {
     const needle = query.q.toLocaleLowerCase('tr-TR');
     const candidates = await prisma.recipe.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       include: recipeInclude,
       orderBy: { updatedAt: 'desc' },
       take: MAX_RECIPE_SEARCH_SCAN,
@@ -140,13 +141,13 @@ export async function listRecipes(userId: string, query: RecipeListQuery) {
 
   const [recipes, total] = await Promise.all([
     prisma.recipe.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       include: recipeInclude,
       orderBy: { updatedAt: 'desc' },
       take: query.limit,
       skip: query.offset,
     }),
-    prisma.recipe.count({ where: { userId } }),
+    prisma.recipe.count({ where: { userId, deletedAt: null } }),
   ]);
 
   return {
@@ -157,7 +158,7 @@ export async function listRecipes(userId: string, query: RecipeListQuery) {
 
 export async function getRecipeById(userId: string, id: string) {
   const recipe = await prisma.recipe.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     include: recipeInclude,
   });
 
@@ -197,7 +198,7 @@ export async function createRecipe(userId: string, input: RecipeBodyInput) {
 
 export async function updateRecipe(userId: string, id: string, input: RecipeBodyInput) {
   const existing = await prisma.recipe.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -235,8 +236,9 @@ export async function updateRecipe(userId: string, id: string, input: RecipeBody
 }
 
 export async function deleteRecipe(userId: string, id: string) {
-  const result = await prisma.recipe.deleteMany({
-    where: { id, userId },
+  const result = await prisma.recipe.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

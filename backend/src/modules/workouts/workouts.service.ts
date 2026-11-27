@@ -33,7 +33,7 @@ export interface PreviousExercisePerformance {
 async function assertTemplateOwnership(userId: string, templateId: string | null | undefined) {
   if (!templateId) return;
   const tpl = await prisma.workoutTemplate.findFirst({
-    where: { id: templateId, userId },
+    where: { id: templateId, userId, deletedAt: null },
     select: { id: true },
   });
   if (!tpl) {
@@ -46,6 +46,7 @@ export async function listWorkoutEntries(userId: string, range: DateRangeQuery) 
   const entries = await prisma.workoutEntry.findMany({
     where: {
       userId,
+      deletedAt: null,
       ...(dateFilter ? { date: dateFilter } : {}),
     },
     include: workoutInclude,
@@ -83,6 +84,7 @@ export async function getPreviousExercisePerformances(
 
   const workoutWhere = {
     userId,
+    deletedAt: null,
     ...(query.beforeDate ? { date: { lt: query.beforeDate } } : {}),
     ...(query.excludeWorkoutId ? { id: { not: query.excludeWorkoutId } } : {}),
   };
@@ -174,7 +176,7 @@ export async function createWorkoutEntry(userId: string, input: WorkoutEntryInpu
 
 export async function updateWorkoutEntry(userId: string, id: string, input: WorkoutEntryInput) {
   const existing = await prisma.workoutEntry.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -232,8 +234,9 @@ export async function updateWorkoutEntry(userId: string, id: string, input: Work
 }
 
 export async function deleteWorkoutEntry(userId: string, id: string) {
-  const result = await prisma.workoutEntry.deleteMany({
-    where: { id, userId },
+  const result = await prisma.workoutEntry.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

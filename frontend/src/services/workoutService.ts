@@ -1,5 +1,12 @@
-import { apiRequest } from './api';
+import {
+  localStore,
+  offlineFirstRead,
+  offlineFirstWrite,
+  removeById,
+  upsertById,
+} from '../offline/localStore';
 import { buildDateRangeQuery, type DateRange } from '../utils/date';
+import { apiRequest } from './api';
 
 export interface ExerciseItem {
   id: string;
@@ -197,69 +204,143 @@ export const exerciseService = {
     limit?: number;
     offset?: number;
   }) =>
-    apiRequest<{ exercises: ExerciseItem[]; total: number; muscleGroups: string[] }>(
-      `/exercises${buildQuery({
-        q: params?.q,
-        muscleGroup: params?.muscleGroup,
-        scope: params?.scope,
-        limit: params?.limit,
-        offset: params?.offset,
-      })}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{ exercises: ExerciseItem[]; total: number; muscleGroups: string[] }>(
+          `/exercises${buildQuery({
+            q: params?.q,
+            muscleGroup: params?.muscleGroup,
+            scope: params?.scope,
+            limit: params?.limit,
+            offset: params?.offset,
+          })}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        for (const e of res.exercises) {
+          if (e.isCore) data.coreExercises = upsertById(data.coreExercises, e);
+          else data.exercises = upsertById(data.exercises, e);
+        }
+      },
+      (data) => localStore.exercises.list(data, params),
     ),
 
   create: (payload: ExercisePayload) =>
-    apiRequest<{ exercise: ExerciseItem }>('/exercises', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ exercise: ExerciseItem }>('/exercises', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.exercises = upsertById(data.exercises, res.exercise);
+      },
+      (userId, data) => localStore.exercises.create(userId, data, payload),
+    ),
 
   update: (id: string, payload: ExercisePayload) =>
-    apiRequest<{ exercise: ExerciseItem }>(`/exercises/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ exercise: ExerciseItem }>(`/exercises/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.exercises = upsertById(data.exercises, res.exercise);
+      },
+      (userId, data) => localStore.exercises.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/exercises/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/exercises/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.exercises = removeById(data.exercises, id);
+      },
+      (userId, data) => localStore.exercises.remove(userId, data, id),
+    ),
 };
 
 export const workoutTemplateService = {
   list: (params?: { q?: string; limit?: number; offset?: number }) =>
-    apiRequest<{ templates: WorkoutTemplate[]; total: number }>(
-      `/workout-templates${buildQuery({
-        q: params?.q,
-        limit: params?.limit,
-        offset: params?.offset,
-      })}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{ templates: WorkoutTemplate[]; total: number }>(
+          `/workout-templates${buildQuery({
+            q: params?.q,
+            limit: params?.limit,
+            offset: params?.offset,
+          })}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        if (!params?.q && !params?.offset) {
+          data.workoutTemplates = res.templates;
+        } else {
+          for (const t of res.templates) data.workoutTemplates = upsertById(data.workoutTemplates, t);
+        }
+      },
+      (data) => localStore.workoutTemplates.list(data, params),
     ),
 
   create: (payload: WorkoutTemplatePayload) =>
-    apiRequest<{ template: WorkoutTemplate }>('/workout-templates', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ template: WorkoutTemplate }>('/workout-templates', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.workoutTemplates = upsertById(data.workoutTemplates, res.template);
+      },
+      (userId, data) => localStore.workoutTemplates.create(userId, data, payload),
+    ),
 
   update: (id: string, payload: WorkoutTemplatePayload) =>
-    apiRequest<{ template: WorkoutTemplate }>(`/workout-templates/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ template: WorkoutTemplate }>(`/workout-templates/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.workoutTemplates = upsertById(data.workoutTemplates, res.template);
+      },
+      (userId, data) => localStore.workoutTemplates.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/workout-templates/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/workout-templates/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.workoutTemplates = removeById(data.workoutTemplates, id);
+      },
+      (userId, data) => localStore.workoutTemplates.remove(userId, data, id),
+    ),
 };
 
 export const workoutService = {
   list: (range?: DateRange) =>
-    apiRequest<{ entries: WorkoutEntry[]; summary: WorkoutSummary }>(
-      `/workouts${buildDateRangeQuery(range)}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{ entries: WorkoutEntry[]; summary: WorkoutSummary }>(
+          `/workouts${buildDateRangeQuery(range)}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        if (!range?.from && !range?.to) {
+          data.workouts = res.entries;
+        } else {
+          for (const e of res.entries) data.workouts = upsertById(data.workouts, e);
+        }
+      },
+      (data) => localStore.workouts.list(data, range),
     ),
 
   getPrevious: (params: {
@@ -268,88 +349,178 @@ export const workoutService = {
     beforeDate?: string;
     excludeWorkoutId?: string;
   }) =>
-    apiRequest<PreviousPerformanceResponse>(
-      `/workouts/previous${buildQuery({
-        exerciseIds: params.exerciseIds?.join(','),
-        exerciseNames: params.exerciseNames?.join(','),
-        beforeDate: params.beforeDate,
-        excludeWorkoutId: params.excludeWorkoutId,
-      })}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<PreviousPerformanceResponse>(
+          `/workouts/previous${buildQuery({
+            exerciseIds: params.exerciseIds?.join(','),
+            exerciseNames: params.exerciseNames?.join(','),
+            beforeDate: params.beforeDate,
+            excludeWorkoutId: params.excludeWorkoutId,
+          })}`,
+          { method: 'GET' },
+        ),
+      () => {},
+      (data) => localStore.workouts.getPrevious(data, params),
     ),
 
   create: (payload: WorkoutEntryPayload) =>
-    apiRequest<{ entry: WorkoutEntry }>('/workouts', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: WorkoutEntry }>('/workouts', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.workouts = upsertById(data.workouts, res.entry);
+      },
+      (userId, data) => localStore.workouts.create(userId, data, payload),
+    ),
 
   update: (id: string, payload: WorkoutEntryPayload) =>
-    apiRequest<{ entry: WorkoutEntry }>(`/workouts/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: WorkoutEntry }>(`/workouts/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.workouts = upsertById(data.workouts, res.entry);
+      },
+      (userId, data) => localStore.workouts.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/workouts/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/workouts/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.workouts = removeById(data.workouts, id);
+      },
+      (userId, data) => localStore.workouts.remove(userId, data, id),
+    ),
 };
 
 export const cardioService = {
   list: (range?: DateRange & { cardioType?: string }) =>
-    apiRequest<{
-      entries: CardioEntry[];
-      cardioTypes: string[];
-      summary: CardioSummary;
-    }>(
-      `/cardio${buildQuery({
-        from: range?.from,
-        to: range?.to,
-        cardioType: range?.cardioType,
-      })}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{
+          entries: CardioEntry[];
+          cardioTypes: string[];
+          summary: CardioSummary;
+        }>(
+          `/cardio${buildQuery({
+            from: range?.from,
+            to: range?.to,
+            cardioType: range?.cardioType,
+          })}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        if (!range?.from && !range?.to && !range?.cardioType) {
+          data.cardio = res.entries;
+        } else {
+          for (const c of res.entries) data.cardio = upsertById(data.cardio, c);
+        }
+      },
+      (data) => localStore.cardio.list(data, range),
     ),
 
   create: (payload: CardioEntryPayload) =>
-    apiRequest<{ entry: CardioEntry }>('/cardio', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: CardioEntry }>('/cardio', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.cardio = upsertById(data.cardio, res.entry);
+      },
+      (userId, data) => localStore.cardio.create(userId, data, payload),
+    ),
 
   update: (id: string, payload: CardioEntryPayload) =>
-    apiRequest<{ entry: CardioEntry }>(`/cardio/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: CardioEntry }>(`/cardio/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.cardio = upsertById(data.cardio, res.entry);
+      },
+      (userId, data) => localStore.cardio.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/cardio/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/cardio/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.cardio = removeById(data.cardio, id);
+      },
+      (userId, data) => localStore.cardio.remove(userId, data, id),
+    ),
 };
 
 export const stepService = {
   list: (range?: DateRange) =>
-    apiRequest<{ entries: StepEntry[]; summary: StepSummary }>(
-      `/steps${buildDateRangeQuery(range)}`,
-      { method: 'GET' },
+    offlineFirstRead(
+      () =>
+        apiRequest<{ entries: StepEntry[]; summary: StepSummary }>(
+          `/steps${buildDateRangeQuery(range)}`,
+          { method: 'GET' },
+        ),
+      (res, data) => {
+        if (!range?.from && !range?.to) {
+          data.steps = res.entries;
+        } else {
+          for (const s of res.entries) data.steps = upsertById(data.steps, s);
+        }
+      },
+      (data) => localStore.steps.list(data, range),
     ),
 
   upsert: (payload: StepEntryPayload) =>
-    apiRequest<{ entry: StepEntry; updated: boolean }>('/steps', {
-      method: 'POST',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: StepEntry; updated: boolean }>('/steps', {
+          method: 'POST',
+          body: payload,
+        }),
+      (res, data) => {
+        data.steps = upsertById(data.steps, res.entry);
+      },
+      (userId, data) => localStore.steps.upsert(userId, data, payload),
+    ),
 
   update: (id: string, payload: StepEntryPayload) =>
-    apiRequest<{ entry: StepEntry }>(`/steps/${id}`, {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ entry: StepEntry }>(`/steps/${id}`, {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.steps = upsertById(data.steps, res.entry);
+      },
+      (userId, data) => localStore.steps.update(userId, data, id, payload),
+    ),
 
   remove: (id: string) =>
-    apiRequest<{ message: string }>(`/steps/${id}`, {
-      method: 'DELETE',
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<{ message: string }>(`/steps/${id}`, {
+          method: 'DELETE',
+        }),
+      (_res, data) => {
+        data.steps = removeById(data.steps, id);
+      },
+      (userId, data) => localStore.steps.remove(userId, data, id),
+    ),
 };
