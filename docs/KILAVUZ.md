@@ -21,7 +21,7 @@
 ```text
 Fitness Tracker/
 ├── .gitignore            # AGENTS.md, docs/INDIRMELER.md, .env, *.db, *.pem/*.key hariç
-├── docs/                 # Takip dokümanları (+ yerel docs/GUVENLIK.md)
+├── docs/                 # Takip dokümanları
 ├── backend/              # prisma/, src/{config,middlewares,modules,utils,app.ts,server.ts}, tests/
 └── frontend/             # src/{components,context,pages,services,utils,App.tsx}, tests/
 ```
@@ -43,8 +43,8 @@ Fitness Tracker/
 - [x] `AUTH-8`..`AUTH-11` Günlük kilo, manuel kalori, antrenman, istatistik paneli ve Faz 2 testleri
 
 **v1.0.1..v2.0.0 — Aşamalı SemVer Geliştirme (`main` + görev branch'i + Smart Commit + Git Tag)**
-- [x] **`v1.0.1` (`AUTH-8`) Güvenlik Sertleştirmesi & Hijyen:** `GUVENLIK.md` açıkları (`helmet`, rate limit, `tokenVersion`, JWT algoritma/secret, JSON/sayfalama sınırı, prod mail kilidi, `.gitignore` desenleri) + testler.
-- [x] **`v1.0.2` (`AUTH-9`) Kişisel Profil & Ortam Tabanlı PIN Kilidi:** Mevcut Auth kodlarını koruyarak profil/hedef/görünür mineral ayarları (`/api/profile`, `/profile`), varsayılan isimle başlangıç, canlıda `APP_PIN` ile kişisel PIN kilidi (`/api/access/*`) ve `G-005` `HttpOnly` kalıcı çerez oturumu.
+- [x] **`v1.0.1` (`AUTH-8`) Güvenlik Sertleştirmesi & Hijyen:** `helmet`, hız sınırı, `tokenVersion`, JWT algoritma/anahtar doğrulaması, JSON/sayfalama sınırı, prod mail kilidi, `.gitignore` desenleri ve testler.
+- [x] **`v1.0.2` (`AUTH-9`) Kişisel Profil & Ortam Tabanlı PIN Kilidi:** Mevcut Auth kodlarını koruyarak profil/hedef/görünür mineral ayarları (`/api/profile`, `/profile`), varsayılan isimle başlangıç, canlıda `APP_PIN` ile kişisel PIN kilidi (`/api/access/*`) ve `HttpOnly` kalıcı çerez oturumu.
 - [x] **`v1.1.0` (`AUTH-10`) Beslenme Çekirdeği & Tarifler:** Temiz v2 beslenme şeması (`Food`, `Recipe`, `RecipeItem`, `NutritionLog`), 47 çekirdek temel besin seed'i, `/api/foods` + `/api/recipes` + snapshot'lı `/api/nutrition/logs` (porsiyon/gram/malzeme ayrıştırma, opsiyonel öğün etiketi, görünür mikro besin özetleri) ve 3 sekmeli `/nutrition` arayüzü.
 - [x] **`v1.2.0` (`AUTH-11`) Barkod / QR & Önbellekli Ürün Arama:** `Food.barcode` alanı + kullanıcı bazlı benzersiz indeks, `GET /api/foods/barcode/:code` (önce yerel DB, yoksa hız sınırlı/zaman aşımı korumalı Open Food Facts ilk-sefer sorgusu + önbellekleme), kamera (`BarcodeDetector` + `@zxing/browser`) / elle kod girişi ve bulunmayan kodu özel besine tanımlama.
 - [x] **`v1.3.0` (`AUTH-12`) Esnek Antrenman, Şablonlar, Kardiyo & Adım:** Kas bölgeli 46 hazır egzersiz seed'i + özel egzersiz CRUD (`/api/exercises`), program şablonları (`/api/workout-templates`), v2 set × tekrar × ağırlık + önceki antrenman hatırlatması (`/api/workouts`, `/api/workouts/previous`), beslenmeden bağımsız kardiyo (`/api/cardio`), profil hedefli günlük adım upsert (`/api/steps`), güncel `/api/stats/summary` ve 4 sekmeli `/workouts` + `/dashboard` UI.
