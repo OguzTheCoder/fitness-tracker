@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSync } from '../context/SyncContext';
 
 interface NavItem {
   to: string;
@@ -14,6 +15,73 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/workouts', label: 'Antrenman', enabled: true },
   { to: '/profile', label: 'Profil', enabled: true },
 ];
+
+function SyncStatusBadge() {
+  const { isOnline, syncState, pendingCount, lastSyncedAt, syncError, triggerSync } = useSync();
+
+  const lastSyncTitle = lastSyncedAt
+    ? `Son eşitleme: ${new Date(lastSyncedAt).toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    : 'Henüz eşitlenmedi';
+
+  if (!isOnline || syncState === 'offline') {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        title="İnternet bağlantısı yok. Değişiklikler cihazda saklanıp çevrimiçi olunca eşitlenir."
+        className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300"
+      >
+        <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
+        <span>Çevrimdışı{pendingCount > 0 ? ` · ${pendingCount} bekleyen` : ''}</span>
+      </span>
+    );
+  }
+
+  if (syncState === 'syncing') {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300"
+      >
+        <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" aria-hidden="true" />
+        <span>Eşitleniyor...</span>
+      </span>
+    );
+  }
+
+  if (syncState === 'error') {
+    return (
+      <button
+        type="button"
+        onClick={() => void triggerSync(false)}
+        title={syncError ?? 'Tekrar eşitle'}
+        className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-300 transition hover:bg-rose-500/20"
+      >
+        <span className="h-2 w-2 rounded-full bg-rose-400" aria-hidden="true" />
+        <span>
+          Eşitleme hatası{pendingCount > 0 ? ` (${pendingCount})` : ''} · Tekrar dene
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void triggerSync(false)}
+      title={`${lastSyncTitle} · Eşitlemek için tıklayın`}
+      aria-label="Şimdi eşitle"
+      className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/70 px-2.5 py-1 text-xs font-medium text-slate-300 transition hover:border-emerald-500/50 hover:text-emerald-300"
+    >
+      <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+      <span>{pendingCount > 0 ? `Eşitle (${pendingCount})` : 'Çevrimiçi'}</span>
+    </button>
+  );
+}
 
 export function AppLayout() {
   const { user, logout } = useAuth();
@@ -58,7 +126,8 @@ export function AppLayout() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <SyncStatusBadge />
             <span className="text-sm text-slate-300">{user?.name}</span>
             <button
               type="button"

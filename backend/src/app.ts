@@ -1,8 +1,12 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import helmet from 'helmet';
-import { env } from './config/env.js';
+import { env, parseCorsOrigins } from './config/env.js';
+import { prisma } from './config/prisma.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { createRateLimiters, type RateLimitConfig } from './middlewares/rateLimit.js';
 import { accessRouter } from './modules/access/access.routes.js';
@@ -18,15 +22,24 @@ import { profileRouter } from './modules/profile/profile.routes.js';
 import { recipesRouter } from './modules/recipes/recipes.routes.js';
 import { statsRouter } from './modules/stats/stats.routes.js';
 import { stepsRouter } from './modules/steps/steps.routes.js';
+import { SYNC_PUSH_MAX_BODY } from './modules/sync/sync.constants.js';
+import { syncRouter } from './modules/sync/sync.routes.js';
 import { weightsRouter } from './modules/weights/weights.routes.js';
 import { workoutsRouter } from './modules/workouts/workouts.routes.js';
 import { workoutTemplatesRouter } from './modules/workoutTemplates/workoutTemplates.routes.js';
+
+export const APP_VERSION = '1.5.0';
 
 export interface CreateAppOptions {
   rateLimit?: Partial<RateLimitConfig>;
   appPin?: string | null;
   cookieSecure?: boolean;
   backupImportLimit?: string;
+  syncPushLimit?: string;
+  trustProxy?: number;
+  corsOrigins?: string[];
+  serveFrontend?: boolean;
+  frontendDistDir?: string;
 }
 
 const AUTH_WRITE_PATHS = [
@@ -40,9 +53,13 @@ const AUTH_WRITE_PATHS = [
 
 export function createApp(options?: CreateAppOptions) {
   const app = express();
-  const { apiLimiter, authWriteLimiters, barcodeLimiter, backupLimiter } = createRateLimiters(
-    options?.rateLimit,
-  );
+  const { apiLimiter, authWriteLimiters, barcodeLimiter, backupLimiter, syncLimiter } =
+    createRateLimiters(options?.rateLimit);
+
+  const trustProxy = options?.trustProxy ?? env.TRUST_PROXY;
+  if (trustProxy > 0) {
+    app.set('trust proxy', trustProxy);
+  }
 
   if (options?.appPin !== undefined) {
     app.locals.appPin = options.appPin;
@@ -51,15 +68,33 @@ export function createApp(options?: CreateAppOptions) {
     app.locals.cookieSecure = options.cookieSecure;
   }
 
+  const allowedOrigins = new Set(options?.corsOrigins ?? parseCorsOrigins(env.CORS_ORIGIN));
+
   app.disable('x-powered-by');
   app.use(helmet({ referrerPolicy: { policy: 'no-referrer' } }));
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
+      credentials: true,
+    }),
+  );
   app.use(cookieParser());
+
   app.use('/api/backup', backupLimiter);
   app.post(
     '/api/backup/import',
     express.json({ limit: options?.backupImportLimit ?? BACKUP_IMPORT_MAX_BODY }),
   );
+
+  app.use('/api/sync', syncLimiter);
+  app.post('/api/sync', express.json({ limit: options?.syncPushLimit ?? SYNC_PUSH_MAX_BODY }));
+
   app.use(express.json({ limit: '16kb' }));
 
   app.use('/api', apiLimiter);
@@ -70,9 +105,31 @@ export function createApp(options?: CreateAppOptions) {
     res.json({ status: 'ok', service: 'fitness-tracker-backend' });
   });
 
+  app.get('/api/ready', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({
+        status: 'ok',
+        service: 'fitness-tracker-backend',
+        version: APP_VERSION,
+        database: 'up',
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      res.status(503).json({
+        status: 'degraded',
+        service: 'fitness-tracker-backend',
+        version: APP_VERSION,
+        database: 'down',
+        error: 'Veritabanı bağlantısı kurulamadı.',
+      });
+    }
+  });
+
   app.use('/api/access', accessRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/backup', backupRouter);
+  app.use('/api/sync', syncRouter);
   app.use('/api/profile', profileRouter);
   app.use('/api/foods', foodsRouter);
   app.use('/api/recipes', recipesRouter);
@@ -85,6 +142,36 @@ export function createApp(options?: CreateAppOptions) {
   app.use('/api/cardio', cardioRouter);
   app.use('/api/steps', stepsRouter);
   app.use('/api/stats', statsRouter);
+
+  const shouldServeFrontend = options?.serveFrontend ?? env.SERVE_FRONTEND === 'true';
+  if (shouldServeFrontend) {
+    const defaultDist = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../../../frontend/dist',
+    );
+    const distDir = path.resolve(options?.frontendDistDir ?? env.FRONTEND_DIST_DIR ?? defaultDist);
+    const indexHtml = path.join(distDir, 'index.html');
+
+    if (fs.existsSync(indexHtml)) {
+      app.use(
+        express.static(distDir, {
+          setHeaders(res, filePath) {
+            if (
+              filePath.endsWith('sw.js') ||
+              filePath.endsWith('manifest.webmanifest') ||
+              filePath.endsWith('index.html')
+            ) {
+              res.setHeader('Cache-Control', 'no-cache');
+            }
+          },
+        }),
+      );
+      app.get(/^(?!\/api(?:\/|$)).*/, (_req, res) => {
+        res.setHeader('Cache-Control', 'no-cache');
+        res.sendFile(indexHtml);
+      });
+    }
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

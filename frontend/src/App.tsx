@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { SyncProvider } from './context/SyncContext';
 import { AccessPage } from './pages/AccessPage';
 import { CaloriesPage } from './pages/CaloriesPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -17,24 +18,26 @@ import { WorkoutsPage } from './pages/WorkoutsPage';
 export function AppRoutes() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/access" element={<AccessPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/weights" element={<WeightsPage />} />
-            <Route path="/nutrition" element={<NutritionPage />} />
-            <Route path="/calories" element={<CaloriesPage />} />
-            <Route path="/workouts" element={<WorkoutsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
+      <SyncProvider>
+        <Routes>
+          <Route path="/access" element={<AccessPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/weights" element={<WeightsPage />} />
+              <Route path="/nutrition" element={<NutritionPage />} />
+              <Route path="/calories" element={<CaloriesPage />} />
+              <Route path="/workouts" element={<WorkoutsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </SyncProvider>
     </AuthProvider>
   );
 }

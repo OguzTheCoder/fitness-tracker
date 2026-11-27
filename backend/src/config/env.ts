@@ -17,14 +17,25 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL tanımlı olmalıdır'),
+  DIRECT_URL: z.string().optional(),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET en az 32 karakter olmalıdır'),
   JWT_EXPIRES_IN: z.string().min(1).default('1d'),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  SERVE_FRONTEND: z.enum(['true', 'false']).default('false'),
+  FRONTEND_DIST_DIR: z.string().optional(),
   APP_PIN: optionalPinSchema,
   CORS_ORIGIN: z.string().min(1).default('http://localhost:5173'),
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().positive().default(15),
 });
+
+export function parseCorsOrigins(raw: string): string[] {
+  return raw
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter((origin) => origin.length > 0 && origin !== '*');
+}
 
 export const env = envSchema.parse(process.env);

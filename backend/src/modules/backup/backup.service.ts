@@ -188,17 +188,17 @@ export async function exportJsonBackup(userId: string): Promise<{
       where: { id: userId },
       select: { name: true, profile: true },
     }),
-    prisma.weightEntry.findMany({ where: { userId }, orderBy: [{ date: 'asc' }] }),
+    prisma.weightEntry.findMany({ where: { userId, deletedAt: null }, orderBy: [{ date: 'asc' }] }),
     prisma.calorieEntry.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
     }),
     prisma.food.findMany({
-      where: { userId, isCore: false },
+      where: { userId, isCore: false, deletedAt: null },
       orderBy: [{ createdAt: 'asc' }],
     }),
     prisma.recipe.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ createdAt: 'asc' }],
       include: {
         items: {
@@ -208,16 +208,16 @@ export async function exportJsonBackup(userId: string): Promise<{
       },
     }),
     prisma.nutritionLog.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
       include: { food: { select: { id: true, isCore: true, coreKey: true } } },
     }),
     prisma.exercise.findMany({
-      where: { userId, isCore: false },
+      where: { userId, isCore: false, deletedAt: null },
       orderBy: [{ createdAt: 'asc' }],
     }),
     prisma.workoutTemplate.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ createdAt: 'asc' }],
       include: {
         exercises: {
@@ -227,7 +227,7 @@ export async function exportJsonBackup(userId: string): Promise<{
       },
     }),
     prisma.workoutEntry.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
       include: {
         exercises: {
@@ -240,10 +240,10 @@ export async function exportJsonBackup(userId: string): Promise<{
       },
     }),
     prisma.cardioEntry.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
     }),
-    prisma.stepEntry.findMany({ where: { userId }, orderBy: [{ date: 'asc' }] }),
+    prisma.stepEntry.findMany({ where: { userId, deletedAt: null }, orderBy: [{ date: 'asc' }] }),
   ]);
 
   if (!user) {
@@ -396,7 +396,7 @@ export async function exportCsvDataset(
   switch (dataset) {
     case 'weights': {
       const entries = await prisma.weightEntry.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }],
       });
       const csv = buildCsv(
@@ -408,7 +408,7 @@ export async function exportCsvDataset(
 
     case 'nutrition': {
       const logs = await prisma.nutritionLog.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       });
       const csv = buildCsv(
@@ -446,7 +446,7 @@ export async function exportCsvDataset(
 
     case 'workouts': {
       const workouts = await prisma.workoutEntry.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
         include: {
           exercises: {
@@ -513,7 +513,7 @@ export async function exportCsvDataset(
 
     case 'cardio': {
       const entries = await prisma.cardioEntry.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       });
       const csv = buildCsv(
@@ -532,7 +532,7 @@ export async function exportCsvDataset(
 
     case 'steps': {
       const entries = await prisma.stepEntry.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }],
       });
       const csv = buildCsv(
@@ -544,7 +544,7 @@ export async function exportCsvDataset(
 
     case 'calories': {
       const entries = await prisma.calorieEntry.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       });
       const csv = buildCsv(
@@ -627,7 +627,7 @@ export async function importJsonBackup(
       const customFoodMap = new Map<string, string>();
       const existingFoods =
         mode === 'merge'
-          ? await tx.food.findMany({ where: { userId, isCore: false } })
+          ? await tx.food.findMany({ where: { userId, isCore: false, deletedAt: null } })
           : [];
       const existingFoodByBarcode = new Map(
         existingFoods.filter((f) => f.barcode).map((f) => [f.barcode!, f]),
@@ -687,7 +687,7 @@ export async function importJsonBackup(
       // 2. Recipes
       const recipeMap = new Map<string, string>();
       const existingRecipes =
-        mode === 'merge' ? await tx.recipe.findMany({ where: { userId } }) : [];
+        mode === 'merge' ? await tx.recipe.findMany({ where: { userId, deletedAt: null } }) : [];
       const existingRecipeByName = new Map(
         existingRecipes.map((r) => [normalizeKey(r.name), r]),
       );
@@ -748,7 +748,7 @@ export async function importJsonBackup(
       const customExerciseMap = new Map<string, string>();
       const existingExercises =
         mode === 'merge'
-          ? await tx.exercise.findMany({ where: { userId, isCore: false } })
+          ? await tx.exercise.findMany({ where: { userId, isCore: false, deletedAt: null } })
           : [];
       const existingExerciseByKey = new Map(
         existingExercises.map((e) => [normalizeKey(e.name, e.muscleGroup), e]),
@@ -787,7 +787,9 @@ export async function importJsonBackup(
       // 4. Workout Templates
       const templateMap = new Map<string, string>();
       const existingTemplates =
-        mode === 'merge' ? await tx.workoutTemplate.findMany({ where: { userId } }) : [];
+        mode === 'merge'
+          ? await tx.workoutTemplate.findMany({ where: { userId, deletedAt: null } })
+          : [];
       const existingTemplateByName = new Map(
         existingTemplates.map((t) => [normalizeKey(t.name), t]),
       );
@@ -848,7 +850,10 @@ export async function importJsonBackup(
         mode === 'merge'
           ? new Set(
               (
-                await tx.weightEntry.findMany({ where: { userId }, select: { date: true } })
+                await tx.weightEntry.findMany({
+                  where: { userId, deletedAt: null },
+                  select: { date: true },
+                })
               ).map((w) => w.date),
             )
           : new Set<string>();
@@ -858,7 +863,7 @@ export async function importJsonBackup(
           if (preferBackup) {
             await tx.weightEntry.update({
               where: { userId_date: { userId, date: weight.date } },
-              data: { weightKg: weight.weightKg, note: weight.note },
+              data: { weightKg: weight.weightKg, note: weight.note, deletedAt: null },
             });
             updated.weights += 1;
           } else {
@@ -866,8 +871,10 @@ export async function importJsonBackup(
           }
           continue;
         }
-        await tx.weightEntry.create({
-          data: { userId, date: weight.date, weightKg: weight.weightKg, note: weight.note },
+        await tx.weightEntry.upsert({
+          where: { userId_date: { userId, date: weight.date } },
+          create: { userId, date: weight.date, weightKg: weight.weightKg, note: weight.note },
+          update: { weightKg: weight.weightKg, note: weight.note, deletedAt: null },
         });
         imported.weights += 1;
       }
@@ -877,7 +884,10 @@ export async function importJsonBackup(
         mode === 'merge'
           ? new Set(
               (
-                await tx.stepEntry.findMany({ where: { userId }, select: { date: true } })
+                await tx.stepEntry.findMany({
+                  where: { userId, deletedAt: null },
+                  select: { date: true },
+                })
               ).map((s) => s.date),
             )
           : new Set<string>();
@@ -887,7 +897,7 @@ export async function importJsonBackup(
           if (preferBackup) {
             await tx.stepEntry.update({
               where: { userId_date: { userId, date: step.date } },
-              data: { steps: step.steps, note: step.note },
+              data: { steps: step.steps, note: step.note, deletedAt: null },
             });
             updated.steps += 1;
           } else {
@@ -895,8 +905,10 @@ export async function importJsonBackup(
           }
           continue;
         }
-        await tx.stepEntry.create({
-          data: { userId, date: step.date, steps: step.steps, note: step.note },
+        await tx.stepEntry.upsert({
+          where: { userId_date: { userId, date: step.date } },
+          create: { userId, date: step.date, steps: step.steps, note: step.note },
+          update: { steps: step.steps, note: step.note, deletedAt: null },
         });
         imported.steps += 1;
       }
@@ -905,7 +917,7 @@ export async function importJsonBackup(
       const existingCalorieSigs =
         mode === 'merge'
           ? buildMultiset(
-              (await tx.calorieEntry.findMany({ where: { userId } })).map((c) =>
+              (await tx.calorieEntry.findMany({ where: { userId, deletedAt: null } })).map((c) =>
                 normalizeKey(c.date, c.mealName, String(c.calories)),
               ),
             )
@@ -927,7 +939,9 @@ export async function importJsonBackup(
       const existingNutritionSigs =
         mode === 'merge'
           ? buildMultiset(
-              (await tx.nutritionLog.findMany({ where: { userId } })).map(nutritionLogSignature),
+              (await tx.nutritionLog.findMany({ where: { userId, deletedAt: null } })).map(
+                nutritionLogSignature,
+              ),
             )
           : new Map<string, number>();
 
@@ -981,7 +995,7 @@ export async function importJsonBackup(
           ? buildMultiset(
               (
                 await tx.workoutEntry.findMany({
-                  where: { userId },
+                  where: { userId, deletedAt: null },
                   include: {
                     exercises: {
                       orderBy: { sortOrder: 'asc' },
@@ -1049,7 +1063,7 @@ export async function importJsonBackup(
       const existingCardioSigs =
         mode === 'merge'
           ? buildMultiset(
-              (await tx.cardioEntry.findMany({ where: { userId } })).map((c) =>
+              (await tx.cardioEntry.findMany({ where: { userId, deletedAt: null } })).map((c) =>
                 normalizeKey(
                   c.date,
                   c.cardioType,

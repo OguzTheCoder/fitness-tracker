@@ -20,7 +20,7 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# Yerel SQLite veritabanı dosyaları
+# Yerel SQLite veritabanı dosyaları ve üretilen şemalar
 *.db
 *.db-journal
 *.db-shm
@@ -29,3 +29,4 @@ coverage/
 *.sqlite3
 *.sqlite-journal
 *.sqlite3-journal
+backend/prisma/schema.postgres.prisma

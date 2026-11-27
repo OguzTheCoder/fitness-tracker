@@ -66,9 +66,9 @@ export function toFoodDto(food: Food): FoodDto {
 }
 
 function buildScopeWhere(userId: string, scope: FoodListQuery['scope']) {
-  if (scope === 'core') return { isCore: true };
-  if (scope === 'custom') return { userId, isCore: false };
-  return { OR: [{ isCore: true }, { userId }] };
+  if (scope === 'core') return { isCore: true, deletedAt: null };
+  if (scope === 'custom') return { userId, isCore: false, deletedAt: null };
+  return { deletedAt: null, OR: [{ isCore: true }, { userId }] };
 }
 
 export async function listFoods(userId: string, query: FoodListQuery) {
@@ -130,6 +130,7 @@ export async function getFoodById(userId: string, id: string) {
   const food = await prisma.food.findFirst({
     where: {
       id,
+      deletedAt: null,
       OR: [{ isCore: true }, { userId }],
     },
   });
@@ -164,14 +165,14 @@ export async function lookupFoodByBarcode(
   await ensureCoreFoodsSeeded();
 
   const localFood = await prisma.food.findFirst({
-    where: { userId, barcode },
+    where: { userId, barcode, deletedAt: null },
   });
   if (localFood) {
     return { found: true, source: 'local', barcode, food: toFoodDto(localFood) };
   }
 
   const coreFood = await prisma.food.findFirst({
-    where: { isCore: true, barcode },
+    where: { isCore: true, barcode, deletedAt: null },
   });
   if (coreFood) {
     return { found: true, source: 'core', barcode, food: toFoodDto(coreFood) };
@@ -241,10 +242,10 @@ export async function createFood(userId: string, input: FoodBodyInput) {
 export async function updateFood(userId: string, id: string, input: FoodBodyInput) {
   const existing = await prisma.food.findUnique({
     where: { id },
-    select: { id: true, userId: true, isCore: true },
+    select: { id: true, userId: true, isCore: true, deletedAt: true },
   });
 
-  if (!existing || (!existing.isCore && existing.userId !== userId)) {
+  if (!existing || existing.deletedAt || (!existing.isCore && existing.userId !== userId)) {
     throw new AppError(404, 'Besin bulunamadı.');
   }
 
@@ -270,10 +271,10 @@ export async function updateFood(userId: string, id: string, input: FoodBodyInpu
 export async function deleteFood(userId: string, id: string) {
   const existing = await prisma.food.findUnique({
     where: { id },
-    select: { id: true, userId: true, isCore: true },
+    select: { id: true, userId: true, isCore: true, deletedAt: true },
   });
 
-  if (!existing || (!existing.isCore && existing.userId !== userId)) {
+  if (!existing || existing.deletedAt || (!existing.isCore && existing.userId !== userId)) {
     throw new AppError(404, 'Besin bulunamadı.');
   }
 
@@ -282,13 +283,16 @@ export async function deleteFood(userId: string, id: string) {
   }
 
   const usedInRecipeCount = await prisma.recipeItem.count({
-    where: { foodId: id, recipe: { userId } },
+    where: { foodId: id, recipe: { userId, deletedAt: null } },
   });
   if (usedInRecipeCount > 0) {
     throw new AppError(409, 'Bu besin bir tarifte kullanıldığı için silinemez.');
   }
 
-  await prisma.food.delete({ where: { id } });
+  await prisma.food.update({
+    where: { id },
+    data: { deletedAt: new Date(), barcode: null },
+  });
 
   return { message: 'Besin silindi.' };
 }

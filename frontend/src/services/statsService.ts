@@ -1,3 +1,4 @@
+import { localStore, offlineFirstRead } from '../offline/localStore';
 import { apiRequest } from './api';
 
 export type StatsDays = 7 | 30 | 90;
@@ -40,7 +41,12 @@ export interface StatsSummaryResponse {
 
 export const statsService = {
   getSummary: (days: StatsDays = 7) =>
-    apiRequest<StatsSummaryResponse>(`/stats/summary?days=${days}`, {
-      method: 'GET',
-    }),
+    offlineFirstRead(
+      () =>
+        apiRequest<StatsSummaryResponse>(`/stats/summary?days=${days}`, {
+          method: 'GET',
+        }),
+      () => {},
+      (data) => localStore.stats.getSummary(data, days),
+    ),
 };

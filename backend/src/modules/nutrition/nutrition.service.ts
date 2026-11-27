@@ -101,6 +101,7 @@ export async function listNutritionLogs(userId: string, query: NutritionLogListQ
     prisma.nutritionLog.findMany({
       where: {
         userId,
+        deletedAt: null,
         ...(dateFilter ? { date: dateFilter } : {}),
       },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
@@ -180,6 +181,7 @@ export async function createNutritionLog(userId: string, input: CreateNutritionL
     const food = await prisma.food.findFirst({
       where: {
         id: input.foodId,
+        deletedAt: null,
         OR: [{ isCore: true }, { userId }],
       },
     });
@@ -232,7 +234,7 @@ export async function createNutritionLog(userId: string, input: CreateNutritionL
 
   // kind === 'recipe'
   const recipe = await prisma.recipe.findFirst({
-    where: { id: input.recipeId, userId },
+    where: { id: input.recipeId, userId, deletedAt: null },
     include: {
       items: {
         orderBy: { sortOrder: 'asc' },
@@ -334,7 +336,7 @@ export async function updateNutritionLog(
   input: UpdateNutritionLogInput,
 ) {
   const existing = await prisma.nutritionLog.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
   });
 
   if (!existing) {
@@ -389,8 +391,9 @@ export async function updateNutritionLog(
 }
 
 export async function deleteNutritionLog(userId: string, id: string) {
-  const result = await prisma.nutritionLog.deleteMany({
-    where: { id, userId },
+  const result = await prisma.nutritionLog.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

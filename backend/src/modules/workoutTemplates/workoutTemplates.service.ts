@@ -17,7 +17,7 @@ const templateInclude = {
 export async function listWorkoutTemplates(userId: string, query: WorkoutTemplateListQuery) {
   if (query.q) {
     const candidates = await prisma.workoutTemplate.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       include: templateInclude,
       orderBy: [{ updatedAt: 'desc' }, { name: 'asc' }],
       take: MAX_SEARCH_SCAN,
@@ -39,13 +39,13 @@ export async function listWorkoutTemplates(userId: string, query: WorkoutTemplat
 
   const [templates, total] = await Promise.all([
     prisma.workoutTemplate.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       include: templateInclude,
       orderBy: [{ updatedAt: 'desc' }, { name: 'asc' }],
       take: query.limit,
       skip: query.offset,
     }),
-    prisma.workoutTemplate.count({ where: { userId } }),
+    prisma.workoutTemplate.count({ where: { userId, deletedAt: null } }),
   ]);
 
   return { templates, total };
@@ -53,7 +53,7 @@ export async function listWorkoutTemplates(userId: string, query: WorkoutTemplat
 
 export async function getWorkoutTemplate(userId: string, id: string) {
   const template = await prisma.workoutTemplate.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     include: templateInclude,
   });
 
@@ -96,7 +96,7 @@ export async function updateWorkoutTemplate(
   input: WorkoutTemplateBodyInput,
 ) {
   const existing = await prisma.workoutTemplate.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     select: { id: true },
   });
 
@@ -133,8 +133,9 @@ export async function updateWorkoutTemplate(
 }
 
 export async function deleteWorkoutTemplate(userId: string, id: string) {
-  const result = await prisma.workoutTemplate.deleteMany({
-    where: { id, userId },
+  const result = await prisma.workoutTemplate.updateMany({
+    where: { id, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
   });
 
   if (result.count === 0) {

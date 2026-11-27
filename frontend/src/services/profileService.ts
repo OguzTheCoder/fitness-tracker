@@ -1,3 +1,4 @@
+import { localStore, offlineFirstRead, offlineFirstWrite } from '../offline/localStore';
 import { apiRequest } from './api';
 
 export type MicronutrientCategory = 'mineral' | 'vitamin';
@@ -39,11 +40,31 @@ export interface UpdateProfilePayload {
 }
 
 export const profileService = {
-  get: () => apiRequest<ProfileResponse>('/profile', { method: 'GET' }),
+  get: () =>
+    offlineFirstRead(
+      () => apiRequest<ProfileResponse>('/profile', { method: 'GET' }),
+      (res, data) => {
+        data.profile = res.profile;
+        if (res.availableMicronutrients?.length > 0) {
+          data.availableMicronutrients = res.availableMicronutrients;
+        }
+      },
+      (data) => localStore.profile.get(data),
+    ),
 
   update: (payload: UpdateProfilePayload) =>
-    apiRequest<ProfileResponse>('/profile', {
-      method: 'PUT',
-      body: payload,
-    }),
+    offlineFirstWrite(
+      () =>
+        apiRequest<ProfileResponse>('/profile', {
+          method: 'PUT',
+          body: payload,
+        }),
+      (res, data) => {
+        data.profile = res.profile;
+        if (res.availableMicronutrients?.length > 0) {
+          data.availableMicronutrients = res.availableMicronutrients;
+        }
+      },
+      (userId, data) => localStore.profile.update(userId, data, payload),
+    ),
 };
