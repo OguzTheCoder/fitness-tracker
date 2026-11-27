@@ -17,7 +17,7 @@ function LocationProbe() {
 }
 
 describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
-  it('G-008: strips ?token= from URL and browser history while keeping token in form state', async () => {
+  it('strips ?token= from URL and browser history while keeping token in form state', async () => {
     const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
 
     render(
@@ -44,7 +44,7 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
     expect(indexHtml).toContain('<meta name="referrer" content="no-referrer" />');
   });
 
-  it('G-011: resolveSafeRedirectPath rejects protocol-relative, external, and malformed redirect targets', () => {
+  it('resolveSafeRedirectPath rejects protocol-relative, external, and malformed redirect targets', () => {
     expect(resolveSafeRedirectPath('/weights')).toBe('/weights');
     expect(resolveSafeRedirectPath('/calories?from=2026-11-01')).toBe('/calories?from=2026-11-01');
 
@@ -56,7 +56,7 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
     expect(resolveSafeRedirectPath(undefined)).toBe('/dashboard');
   });
 
-  it('G-011: LoginPage ignores unsafe location.state.from.pathname and redirects safely to /dashboard', async () => {
+  it('LoginPage ignores unsafe location.state.from.pathname and redirects safely to /dashboard', async () => {
     const user = userEvent.setup();
     const mockUser = {
       id: 'u-sec',
@@ -123,7 +123,7 @@ describe('Frontend Security Suite (AUTH-8 / v1.0.1)', () => {
     });
   });
 
-  it('G-005: does not store JWT in localStorage and sends credentials: include on API calls', () => {
+  it('does not store JWT in localStorage and sends credentials: include on API calls', () => {
     const authContextSrc = fs.readFileSync(
       path.join(frontendRoot, 'src', 'context', 'AuthContext.tsx'),
       'utf8',

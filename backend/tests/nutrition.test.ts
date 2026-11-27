@@ -84,7 +84,7 @@ describe('Nutrition Core, Recipes, Snapshots & Micronutrients (AUTH-10 / v1.1.0)
     expect(searchRes.status).toBe(200);
     expect(searchRes.body.foods.length).toBeGreaterThanOrEqual(2);
 
-    // Pagination upper bound (G-007)
+    // Pagination upper bound
     const badLimitRes = await request(app)
       .get('/api/foods?limit=500')
       .set('Cookie', cookieA);
@@ -412,7 +412,7 @@ describe('Nutrition Core, Recipes, Snapshots & Micronutrients (AUTH-10 / v1.1.0)
     expect(statsRes.status).toBe(200);
     expect(statsRes.body.summary.todayCalories).toBe(100);
 
-    // Pagination limit bound on logs (G-007)
+    // Pagination limit bound on logs
     const badLogsLimit = await request(app)
       .get('/api/nutrition/logs?limit=999')
       .set('Cookie', cookieA);

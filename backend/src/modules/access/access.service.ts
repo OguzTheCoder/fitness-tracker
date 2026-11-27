@@ -130,7 +130,7 @@ export function verifyPinConstantTime(candidate: string, expected: string): bool
 /**
  * Ensures that if APP_PIN changed in the environment, the personal owner's
  * tokenVersion is incremented immediately so all previously issued cookies/JWTs
- * are invalidated (G-002).
+ * are invalidated.
  */
 export async function syncPersonalOwnerPin<
   T extends Pick<User, 'id' | 'isPersonalOwner' | 'pinFingerprint' | 'tokenVersion'>,

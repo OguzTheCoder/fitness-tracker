@@ -391,7 +391,7 @@ describe('Workouts v2, Templates, Exercises, Cardio & Steps (AUTH-12)', () => {
     ]);
   });
 
-  it('enforces pagination upper bounds (G-007) across all new list endpoints', async () => {
+  it('enforces pagination upper bounds across all new list endpoints', async () => {
     const { token } = await createAuthedUser('limits@example.com');
 
     const badExerciseLimit = await request(app)

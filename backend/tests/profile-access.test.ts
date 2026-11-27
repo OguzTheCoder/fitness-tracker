@@ -167,7 +167,7 @@ describe('Profile, Environment Access & HttpOnly Cookie Session (AUTH-9 / v1.0.2
     });
   });
 
-  describe('PIN Mode (APP_PIN set), Rate Limit, tokenVersion & G-005 Cookie Flags', () => {
+  describe('PIN Mode (APP_PIN set), Rate Limit, tokenVersion & HttpOnly Cookie Flags', () => {
     it('enforces PIN on setup/unlock, blocks local-session, sets Secure HttpOnly cookie, and revokes sessions on PIN change & logout-all', async () => {
       const pinApp = createApp({ appPin: '246810', cookieSecure: true });
 
@@ -221,7 +221,7 @@ describe('Profile, Environment Access & HttpOnly Cookie Session (AUTH-9 / v1.0.2
         (await request(pinApp).get('/api/profile').set('Cookie', deviceBCookie)).status,
       ).toBe(200);
 
-      // Changing APP_PIN immediately invalidates all old cookies via tokenVersion (G-002)
+      // Changing APP_PIN immediately invalidates all old cookies via tokenVersion
       const rotatedPinApp = createApp({ appPin: '998877', cookieSecure: true });
       const oldDeviceCheck = await request(rotatedPinApp)
         .get('/api/profile')
@@ -262,7 +262,7 @@ describe('Profile, Environment Access & HttpOnly Cookie Session (AUTH-9 / v1.0.2
       ).toBe(401);
     });
 
-    it('G-001: rate-limits PIN unlock brute-force attempts with 429', async () => {
+    it('rate-limits PIN unlock brute-force attempts with 429', async () => {
       const strictPinApp = createApp({
         appPin: '246810',
         rateLimit: { windowMs: 60_000, authIpMax: 2, authAccountMax: 2, apiMax: 20 },
@@ -284,7 +284,7 @@ describe('Profile, Environment Access & HttpOnly Cookie Session (AUTH-9 / v1.0.2
       expect(attempt3.status).toBe(429);
     });
 
-    it('G-005: classic /api/auth/login and /api/auth/register set HttpOnly cookie and authenticate /api/auth/me without Bearer header', async () => {
+    it('classic /api/auth/login and /api/auth/register set HttpOnly cookie and authenticate /api/auth/me without Bearer header', async () => {
       const app = createApp({ cookieSecure: true });
 
       const registerRes = await request(app).post('/api/auth/register').send({

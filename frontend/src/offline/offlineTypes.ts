@@ -57,7 +57,7 @@ export interface UserLocalData {
 }
 
 /**
- * Non-sensitive display metadata only — NEVER stores tokens, cookies, passwords, or PINs (G-005).
+ * Non-sensitive display metadata only — NEVER stores tokens, cookies, passwords, or PINs.
  */
 export interface CachedSessionMeta {
   user: User;

@@ -48,7 +48,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     await prisma.$disconnect();
   });
 
-  it('G-004 & G-008: sets Helmet security headers, Referrer-Policy: no-referrer, and hides X-Powered-By', async () => {
+  it('sets Helmet security headers, Referrer-Policy: no-referrer, and hides X-Powered-By', async () => {
     const res = await request(app).get('/api/health');
 
     expect(res.status).toBe(200);
@@ -59,7 +59,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(res.headers['content-security-policy']).toBeDefined();
   });
 
-  it('G-001: enforces account-based, IP-based, and general API rate limits with 429', async () => {
+  it('enforces account-based, IP-based, and general API rate limits with 429', async () => {
     const strictApp = createApp({
       rateLimit: {
         windowMs: 60_000,
@@ -106,7 +106,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(seventhApi.status).toBe(429);
   });
 
-  it('G-002: invalidates existing JWTs immediately when password is reset (tokenVersion)', async () => {
+  it('invalidates existing JWTs immediately when password is reset (tokenVersion)', async () => {
     const registerRes = await request(app).post('/api/auth/register').send({
       name: 'Oğuz',
       email: 'oguz@example.com',
@@ -151,7 +151,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(activeMe.status).toBe(200);
   });
 
-  it('G-003: blocks ConsoleMailProvider in production environment', () => {
+  it('blocks ConsoleMailProvider in production environment', () => {
     expect(() => new ConsoleMailProvider('production')).toThrow(/ConsoleMailProvider/);
 
     setMailProvider(null);
@@ -159,7 +159,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     setMailProvider(mailProvider);
   });
 
-  it('G-006: prevents TOCTOU race condition on concurrent password reset requests', async () => {
+  it('prevents TOCTOU race condition on concurrent password reset requests', async () => {
     await request(app).post('/api/auth/register').send({
       name: 'Oğuz',
       email: 'race@example.com',
@@ -187,7 +187,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(updatedUser.tokenVersion).toBe(1);
   });
 
-  it('G-007: enforces 16kb JSON body limit (413), 72-char login password max (400), and list pagination', async () => {
+  it('enforces 16kb JSON body limit (413), 72-char login password max (400), and list pagination', async () => {
     const oversizedNote = 'x'.repeat(20 * 1024);
     const largeRes = await request(app).post('/api/auth/login').send({
       email: 'oguz@example.com',
@@ -232,7 +232,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(excessiveLimit.status).toBe(400);
   });
 
-  it('G-009: runs bcrypt.compare even when login email does not exist', async () => {
+  it('runs bcrypt.compare even when login email does not exist', async () => {
     const compareSpy = vi.spyOn(bcrypt, 'compare');
 
     const res = await request(app).post('/api/auth/login').send({
@@ -245,7 +245,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     compareSpy.mockRestore();
   });
 
-  it('G-010 & R-003: pins JWT algorithm to HS256, enforces >=32-char secret, and ignores key/sqlite patterns', async () => {
+  it('pins JWT algorithm to HS256, enforces >=32-char secret, and ignores key/sqlite patterns', async () => {
     expect(env.JWT_SECRET.length).toBeGreaterThanOrEqual(32);
 
     const reg = await request(app).post('/api/auth/register').send({
@@ -282,7 +282,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     }
   });
 
-  it('G-012: fails fast when APP_PIN is empty in production, disables /local-session in production, and rate-limits /local-session locally', async () => {
+  it('fails fast when APP_PIN is empty in production, disables /local-session in production, and rate-limits /local-session locally', async () => {
     expect(() =>
       parseEnv({
         ...BASE_PROD_ENV,
@@ -321,7 +321,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(resume2.status).toBe(429);
   });
 
-  it('G-013: blocks public auth endpoints in PIN mode by default, reserves personal@local.fitness, and omits raw token from JSON', async () => {
+  it('blocks public auth endpoints in PIN mode by default, reserves personal@local.fitness, and omits raw token from JSON', async () => {
     const pinApp = createApp({ appPin: '83947261' });
 
     const setupRes = await request(pinApp)
@@ -402,7 +402,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(normalLogin.headers['set-cookie']).toBeDefined();
   });
 
-  it('G-014: enforces production PIN strength, IP-independent global PIN rate limit, and persistent DB lockout/backoff', async () => {
+  it('enforces production PIN strength, IP-independent global PIN rate limit, and persistent DB lockout/backoff', async () => {
     // Production PIN policy: min 8 chars, reject repetitive/sequential/common pins
     for (const weakPin of ['1234', '246810', '11111111', '12121212', '12345678', '87654321', 'password1', 'changeme1']) {
       expect(() => parseEnv({ ...BASE_PROD_ENV, APP_PIN: weakPin })).toThrow(/APP_PIN/);
@@ -515,7 +515,7 @@ describe('Security Hardening Suite (v1.0.1 & v2.0.1)', () => {
     expect(clearedState).toBeNull();
   });
 
-  it('G-015: rejects placeholder and low-entropy JWT_SECRET values in production', () => {
+  it('rejects placeholder and low-entropy JWT_SECRET values in production', () => {
     const weakSecrets = [
       'change-this-to-a-long-random-secret-in-production',
       'my-default-secret-value-for-production-use',

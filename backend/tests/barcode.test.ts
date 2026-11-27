@@ -245,7 +245,7 @@ describe('Barcode / QR Lookup & Open Food Facts Caching (AUTH-11 / v1.2.0)', () 
     expect(res.body.externalError).toContain('Open Food Facts');
   });
 
-  it('G-001: enforces dedicated rate limiting on GET /api/foods/barcode/:code with 429', async () => {
+  it('enforces dedicated rate limiting on GET /api/foods/barcode/:code with 429', async () => {
     const strictApp = createApp({
       appPin: null,
       rateLimit: {
