@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ClipboardList, Dumbbell, Footprints, HeartPulse } from 'lucide-react';
 import { CardioTab } from '../components/workouts/CardioTab';
 import { StepsTab } from '../components/workouts/StepsTab';
 import { TemplatesExercisesTab } from '../components/workouts/TemplatesExercisesTab';
@@ -12,19 +14,31 @@ import {
 
 type ActiveTab = 'workouts' | 'templates' | 'cardio' | 'steps';
 
-const TABS: { key: ActiveTab; label: string }[] = [
-  { key: 'workouts', label: 'Antrenmanlar' },
-  { key: 'templates', label: 'Şablonlar & Egzersizler' },
-  { key: 'cardio', label: 'Kardiyo' },
-  { key: 'steps', label: 'Günlük Adım' },
+const TABS: { key: ActiveTab; label: string; icon: typeof Dumbbell }[] = [
+  { key: 'workouts', label: 'Antrenmanlar', icon: Dumbbell },
+  { key: 'templates', label: 'Şablonlar & Egzersizler', icon: ClipboardList },
+  { key: 'cardio', label: 'Kardiyo', icon: HeartPulse },
+  { key: 'steps', label: 'Günlük Adım', icon: Footprints },
 ];
 
 export function WorkoutsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ActiveTab>('workouts');
+  const [initialOpenNew, setInitialOpenNew] = useState(false);
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [pendingTemplate, setPendingTemplate] = useState<WorkoutTemplate | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setActiveTab('workouts');
+      setInitialOpenNew(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const loadCatalog = useCallback(async () => {
     const [exRes, tplRes] = await Promise.all([
@@ -53,23 +67,31 @@ export function WorkoutsPage() {
     setPendingTemplate(null);
   }, []);
 
+  const handleConsumeInitialOpenNew = useCallback(() => {
+    setInitialOpenNew(false);
+  }, []);
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Antrenman, Kardiyo & Adım</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Şablon veya serbest hareketlerle set × tekrar × ağırlık kaydet, kardiyo ve günlük adımlarını takip et.
+          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+            Antrenman, Kardiyo & Adım
+          </h1>
+          <p className="mt-1 text-xs text-ink-muted sm:text-sm">
+            Şablon veya serbest hareketlerle set × tekrar × ağırlık kaydet, kardiyo ve günlük
+            adımlarını takip et.
           </p>
         </div>
 
         <div
           role="tablist"
           aria-label="Antrenman sekmeleri"
-          className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 p-1"
+          className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-line bg-surface p-1 shadow-sm"
         >
           {TABS.map((tab) => {
             const selected = activeTab === tab.key;
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.key}
@@ -77,13 +99,14 @@ export function WorkoutsPage() {
                 type="button"
                 aria-selected={selected}
                 onClick={() => setActiveTab(tab.key)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
                   selected
-                    ? 'bg-emerald-500 text-slate-950'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                    : 'text-ink-secondary hover:bg-elevated hover:text-ink'
                 }`}
               >
-                {tab.label}
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -96,7 +119,9 @@ export function WorkoutsPage() {
           muscleGroups={muscleGroups}
           templates={templates}
           pendingTemplate={pendingTemplate}
+          initialOpenNew={initialOpenNew}
           onConsumePendingTemplate={handleConsumePendingTemplate}
+          onConsumeInitialOpenNew={handleConsumeInitialOpenNew}
         />
       )}
 

@@ -132,7 +132,8 @@ describe('Offline-First Queue, Auto-Sync & PWA Security (AUTH-14 / v1.5.0)', () 
     expect(await screen.findByText('Önbellekten kilo')).toBeInTheDocument();
     expect(screen.getByText(/Çevrimdışı/)).toBeInTheDocument();
 
-    // Add a new weight entry while offline
+    // Open New Weight Drawer & add a new weight entry while offline
+    await user.click(screen.getByRole('button', { name: 'Yeni Kilo Kaydı' }));
     const dateInput = screen.getByLabelText(/^Tarih/i);
     const weightInput = screen.getByLabelText(/Kilo \(kg\)/i);
     await user.clear(dateInput);

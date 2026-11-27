@@ -182,44 +182,42 @@ export function CaloriesPage() {
     <div className="space-y-6">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Manuel Kalori Takibi</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+            Manuel Kalori Takibi
+          </h1>
+          <p className="mt-1 text-xs text-ink-muted sm:text-sm">
             Öğünlerini tarih ve kalori bilgisiyle kaydet, günlük toplam kalori alımını takip et.
           </p>
         </div>
         {entries.length > 0 && (
           <div className="flex flex-wrap gap-3 text-xs">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">Bugün: </span>
-              <span className="font-semibold text-emerald-400">{todayTotal} kcal</span>
+            <div className="ft-card px-3.5 py-2">
+              <span className="text-ink-muted">Bugün: </span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {todayTotal} kcal
+              </span>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">Listelenen Toplam: </span>
-              <span className="font-semibold text-slate-200">{totalCalories} kcal</span>
+            <div className="ft-card px-3.5 py-2">
+              <span className="text-ink-muted">Listelenen Toplam: </span>
+              <span className="font-bold text-ink">{totalCalories} kcal</span>
             </div>
           </div>
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h2 className="text-base font-semibold text-white">
+      <section className="ft-card p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-ink">
           {editingId ? 'Kalori Kaydını Düzenle' : 'Yeni Kalori Kaydı'}
         </h2>
 
         <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
@@ -258,19 +256,11 @@ export function CaloriesPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
               {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kaydet'}
             </button>
             {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
-              >
+              <button type="button" onClick={resetForm} className="ft-btn-ghost text-sm">
                 İptal
               </button>
             )}
@@ -280,27 +270,24 @@ export function CaloriesPage() {
 
       <DateRangeFilter value={range} onApply={setRange} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Günlük Kalori Geçmişi</h2>
-          <span className="text-xs text-slate-400">
+          <h2 className="text-base font-semibold text-ink">Günlük Kalori Geçmişi</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
             {groupedByDate.length} gün · {entries.length} öğün
           </span>
         </div>
 
         {listError && (
-          <div
-            role="alert"
-            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-          >
+          <div role="alert" className="ft-alert-error">
             {listError}
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-8 text-center text-sm text-slate-400">Kalori kayıtları yükleniyor...</p>
+          <p className="py-8 text-center text-sm text-ink-muted">Kalori kayıtları yükleniyor...</p>
         ) : groupedByDate.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-ink-muted">
             {range.from || range.to
               ? 'Seçilen tarih aralığında kalori kaydı bulunamadı.'
               : 'Henüz kalori kaydı eklenmemiş. Yukarıdaki formdan ilk öğününü girebilirsin.'}
@@ -310,39 +297,39 @@ export function CaloriesPage() {
             {groupedByDate.map((group) => (
               <div
                 key={group.date}
-                className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/50"
+                className="overflow-hidden rounded-xl border border-line bg-subtle"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 bg-slate-900/80 px-4 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-elevated/70 px-4 py-2.5">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-ink">
                       {formatTurkishDate(group.date)}
                     </span>
-                    <span className="text-xs text-slate-500">{group.date}</span>
-                    <span className="text-xs text-slate-400">({group.count} öğün)</span>
+                    <span className="text-xs text-ink-muted">{group.date}</span>
+                    <span className="text-xs text-ink-muted">({group.count} öğün)</span>
                   </div>
-                  <span className="rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-semibold text-emerald-300">
+                  <span className="rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                     Günlük Toplam: {group.totalCalories} kcal
                   </span>
                 </div>
 
-                <ul className="divide-y divide-slate-800/80 px-4">
+                <ul className="divide-y divide-line px-4">
                   {group.items.map((entry) => (
                     <li
                       key={entry.id}
                       className="flex flex-wrap items-center justify-between gap-3 py-3"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="min-w-[82px] text-sm font-bold text-emerald-400">
+                        <span className="min-w-[82px] text-sm font-bold text-emerald-600 dark:text-emerald-400">
                           {entry.calories} kcal
                         </span>
-                        <span className="text-sm text-slate-200">{entry.mealName}</span>
+                        <span className="text-sm text-ink">{entry.mealName}</span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => startEdit(entry)}
-                          className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+                          className="ft-btn-secondary py-1.5"
                         >
                           Düzenle
                         </button>
@@ -350,7 +337,7 @@ export function CaloriesPage() {
                           type="button"
                           disabled={deletingId === entry.id}
                           onClick={() => handleDelete(entry.id)}
-                          className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                          className="ft-btn-danger py-1.5"
                         >
                           {deletingId === entry.id ? 'Siliniyor...' : 'Sil'}
                         </button>

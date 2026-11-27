@@ -168,48 +168,54 @@ export function CardioTab() {
   return (
     <div className="space-y-6">
       {summary.totalCount > 0 && (
-        <div className="flex flex-wrap gap-3 text-xs">
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-            <span className="text-slate-400">Kardiyo Sayısı: </span>
-            <span className="font-semibold text-emerald-400">{summary.totalCount}</span>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+          <div className="ft-card p-3.5">
+            <span className="text-ink-muted">Kardiyo Sayısı</span>
+            <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              {summary.totalCount}
+            </p>
           </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-            <span className="text-slate-400">Toplam Süre: </span>
-            <span className="font-semibold text-slate-200">{summary.totalDurationMinutes} dk</span>
+          <div className="ft-card p-3.5">
+            <span className="text-ink-muted">Toplam Süre</span>
+            <p className="mt-1 text-lg font-bold text-ink">{summary.totalDurationMinutes} dk</p>
           </div>
           {summary.totalDistanceKm > 0 && (
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">Toplam Mesafe: </span>
-              <span className="font-semibold text-sky-300">{summary.totalDistanceKm} km</span>
+            <div className="ft-card p-3.5">
+              <span className="text-ink-muted">Toplam Mesafe</span>
+              <p className="mt-1 text-lg font-bold text-sky-600 dark:text-sky-400">
+                {summary.totalDistanceKm} km
+              </p>
             </div>
           )}
           {summary.totalCaloriesBurned > 0 && (
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">Tahmini Yakılan: </span>
-              <span className="font-semibold text-amber-300">{summary.totalCaloriesBurned} kcal</span>
+            <div className="ft-card p-3.5">
+              <span className="text-ink-muted">Tahmini Yakılan</span>
+              <p className="mt-1 text-lg font-bold text-amber-600 dark:text-amber-300">
+                {summary.totalCaloriesBurned} kcal
+              </p>
             </div>
           )}
         </div>
       )}
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold text-white">
+          <h2 className="text-base font-semibold text-ink">
             {editingId ? 'Kardiyo Kaydını Düzenle' : 'Yeni Kardiyo Kaydı'}
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-ink-muted">
             Yakılan kalori yalnızca bilgi amaçlıdır, günlük beslenme hedefine eklenmez.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           {formError && (
-            <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300">
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
@@ -220,10 +226,10 @@ export function CardioTab() {
                 key={type}
                 type="button"
                 onClick={() => setCardioType(type)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                   cardioType === type
                     ? 'bg-emerald-500 text-slate-950'
-                    : 'border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white'
+                    : 'border border-line-strong bg-subtle text-ink-secondary hover:text-ink'
                 }`}
               >
                 {type}
@@ -293,19 +299,11 @@ export function CardioTab() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-            >
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
               {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kardiyo Kaydet'}
             </button>
             {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:border-slate-500"
-              >
+              <button type="button" onClick={resetForm} className="ft-btn-ghost text-sm">
                 İptal
               </button>
             )}
@@ -315,26 +313,28 @@ export function CardioTab() {
 
       <DateRangeFilter value={range} onApply={setRange} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Kardiyo Geçmişi</h2>
-          <span className="text-xs text-slate-400">{entries.length} kayıt</span>
+          <h2 className="text-base font-semibold text-ink">Kardiyo Geçmişi</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {entries.length} kayıt
+          </span>
         </div>
 
         {listError && (
-          <div role="alert" className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          <div role="alert" className="ft-alert-error">
             {listError}
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-8 text-center text-sm text-slate-400">Kardiyo kayıtları yükleniyor...</p>
+          <p className="py-8 text-center text-sm text-ink-muted">Kardiyo kayıtları yükleniyor...</p>
         ) : entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-ink-muted">
             Henüz kardiyo kaydı eklenmemiş.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {entries.map((entry) => (
               <li
                 key={entry.id}
@@ -342,30 +342,30 @@ export function CardioTab() {
               >
                 <div className="space-y-0.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-semibold text-white">{entry.cardioType}</span>
-                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+                    <span className="text-base font-semibold text-ink">{entry.cardioType}</span>
+                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                       {entry.durationMinutes} dk
                     </span>
                     {entry.distanceKm !== null && (
-                      <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-semibold text-sky-300">
+                      <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-semibold text-sky-700 dark:text-sky-300">
                         {entry.distanceKm} km
                       </span>
                     )}
                     {entry.caloriesBurned !== null && (
-                      <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-300">
+                      <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
                         {entry.caloriesBurned} kcal
                       </span>
                     )}
-                    <span className="text-sm text-slate-300">{formatTurkishDate(entry.date)}</span>
+                    <span className="text-xs text-ink-muted">{formatTurkishDate(entry.date)}</span>
                   </div>
-                  {entry.note && <p className="text-sm text-slate-400">{entry.note}</p>}
+                  {entry.note && <p className="text-xs text-ink-muted">{entry.note}</p>}
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => startEdit(entry)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-emerald-500/60 hover:text-emerald-300"
+                    className="ft-btn-secondary py-1.5"
                   >
                     Düzenle
                   </button>
@@ -373,7 +373,7 @@ export function CardioTab() {
                     type="button"
                     disabled={deletingId === entry.id}
                     onClick={() => void handleDelete(entry.id)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                    className="ft-btn-danger py-1.5"
                   >
                     {deletingId === entry.id ? 'Siliniyor...' : 'Sil'}
                   </button>

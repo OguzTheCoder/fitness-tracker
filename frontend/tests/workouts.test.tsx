@@ -166,6 +166,9 @@ describe('Frontend Workouts, Templates, Cardio & Steps Page (AUTH-12)', () => {
     expect(await screen.findByText('Tempolu Koşu')).toBeInTheDocument();
     expect(screen.getByText('5 km parkur')).toBeInTheDocument();
 
+    // Open New Workout Drawer
+    await user.click(screen.getByRole('button', { name: 'Yeni Antrenman' }));
+
     // Client validation blocks empty form
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));
     expect(screen.getByText('Antrenman adı giriniz.')).toBeInTheDocument();

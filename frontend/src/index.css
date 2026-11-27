@@ -1,3 +1,99 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --c-canvas: 248 250 252;
+    --c-surface: 255 255 255;
+    --c-elevated: 241 245 249;
+    --c-subtle: 241 245 249;
+    --c-line: 226 232 240;
+    --c-line-strong: 203 213 225;
+    --c-ink: 15 23 42;
+    --c-ink-secondary: 51 65 85;
+    --c-ink-muted: 100 116 139;
+    color-scheme: light;
+  }
+
+  .dark {
+    --c-canvas: 9 13 22;
+    --c-surface: 15 23 36;
+    --c-elevated: 21 31 48;
+    --c-subtle: 11 18 30;
+    --c-line: 30 41 59;
+    --c-line-strong: 51 65 85;
+    --c-ink: 248 250 252;
+    --c-ink-secondary: 203 213 225;
+    --c-ink-muted: 148 163 184;
+    color-scheme: dark;
+  }
+
+  html {
+    font-family:
+      'Inter',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .ft-card {
+    @apply rounded-2xl border border-line bg-surface shadow-card transition-colors;
+  }
+
+  .ft-card-subtle {
+    @apply rounded-xl border border-line bg-subtle transition-colors;
+  }
+
+  .ft-input {
+    @apply w-full rounded-xl border border-line-strong bg-subtle px-3.5 py-2.5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25;
+  }
+
+  .ft-input-sm {
+    @apply rounded-xl border border-line-strong bg-subtle px-3 py-2 text-xs text-ink placeholder-ink-muted outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25;
+  }
+
+  .ft-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-emerald-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .ft-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-elevated/80 px-3.5 py-2 text-xs font-semibold text-ink-secondary transition hover:border-emerald-500/50 hover:text-emerald-600 dark:hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .ft-btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted transition hover:bg-elevated hover:text-ink disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .ft-btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300 disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .ft-alert-error {
+    @apply rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300;
+  }
+
+  .ft-alert-success {
+    @apply rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300;
+  }
+
+  .ft-alert-warn {
+    @apply rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200;
+  }
+}
+
+/* Safe area bottom padding for installed iOS/Android PWAs */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}

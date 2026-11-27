@@ -206,25 +206,19 @@ export function FoodsTab({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h2 className="text-base font-semibold text-white">
+      <section className="ft-card p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-ink">
           {editingId ? 'Özel Besini Düzenle' : 'Kendi Besinini Ekle (100 g Bazlı)'}
         </h2>
 
         <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
@@ -328,7 +322,7 @@ export function FoodsTab({
             <button
               type="button"
               onClick={() => setShowMicros((prev) => !prev)}
-              className="text-xs font-medium text-emerald-400 transition hover:text-emerald-300"
+              className="text-xs font-semibold text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400"
             >
               {showMicros
                 ? '▲ Mikro besin alanlarını gizle'
@@ -337,11 +331,8 @@ export function FoodsTab({
             {showMicros && (
               <div className="mt-3 grid gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                 {microCatalog.map((item) => (
-                  <label
-                    key={item.key}
-                    className="rounded-xl border border-slate-800 bg-slate-950/60 p-2.5 text-xs text-slate-300"
-                  >
-                    <span className="block text-[11px] text-slate-400">
+                  <label key={item.key} className="ft-card-subtle p-2.5 text-xs text-ink-secondary">
+                    <span className="block text-[11px] text-ink-muted">
                       {item.label} ({item.unit})
                     </span>
                     <input
@@ -353,7 +344,7 @@ export function FoodsTab({
                       onChange={(e) =>
                         setMicroInputs((prev) => ({ ...prev, [item.key]: e.target.value }))
                       }
-                      className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white outline-none focus:border-emerald-400"
+                      className="ft-input-sm mt-1 w-full"
                     />
                   </label>
                 ))}
@@ -362,19 +353,11 @@ export function FoodsTab({
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-            >
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
               {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Besin Ekle'}
             </button>
             {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:text-white"
-              >
+              <button type="button" onClick={resetForm} className="ft-btn-ghost text-sm">
                 İptal
               </button>
             )}
@@ -382,7 +365,7 @@ export function FoodsTab({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -391,7 +374,7 @@ export function FoodsTab({
               placeholder="Besin, marka, kategori veya barkod ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-white outline-none focus:border-emerald-400"
+              className="ft-input w-64 py-2"
             />
             <div className="flex items-center gap-1" role="group" aria-label="Besin kapsamı">
               {[
@@ -403,10 +386,10 @@ export function FoodsTab({
                   key={item.key}
                   type="button"
                   onClick={() => setScope(item.key as 'all' | 'core' | 'custom')}
-                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                     scope === item.key
-                      ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
-                      : 'border border-slate-700 text-slate-400 hover:text-white'
+                      ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/40 dark:text-emerald-300'
+                      : 'border border-line-strong bg-subtle text-ink-muted hover:text-ink'
                   }`}
                 >
                   {item.label}
@@ -414,41 +397,49 @@ export function FoodsTab({
               ))}
             </div>
           </div>
-          <span className="text-xs text-slate-400">{filteredFoods.length} besin</span>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {filteredFoods.length} besin
+          </span>
         </div>
 
         {filteredFoods.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-6 text-center text-sm text-ink-muted">
             Aramana uygun besin bulunamadı.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {filteredFoods.map((food) => (
-              <li key={food.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <li
+                key={food.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-white">{food.name}</span>
-                    {food.brand && <span className="text-xs text-slate-400">· {food.brand}</span>}
+                    <span className="text-sm font-semibold text-ink">{food.name}</span>
+                    {food.brand && <span className="text-xs text-ink-muted">· {food.brand}</span>}
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] ${
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                         food.isCore
-                          ? 'bg-slate-800 text-slate-300'
-                          : 'bg-emerald-500/15 text-emerald-300'
+                          ? 'bg-elevated text-ink-secondary'
+                          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                       }`}
                     >
                       {food.isCore ? 'Temel' : 'Özel'}
                     </span>
                     {food.category && (
-                      <span className="text-[11px] text-slate-500">{food.category}</span>
+                      <span className="text-[11px] text-ink-muted">{food.category}</span>
                     )}
                     {food.barcode && (
-                      <span className="rounded bg-slate-800/80 px-1.5 py-0.5 font-mono text-[11px] text-slate-300">
+                      <span className="rounded bg-subtle px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
                         {food.barcode}
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    100 g: <strong className="text-emerald-400">{food.caloriesPer100g} kcal</strong>{' '}
+                  <p className="mt-0.5 text-xs text-ink-muted">
+                    100 g:{' '}
+                    <strong className="text-emerald-600 dark:text-emerald-400">
+                      {food.caloriesPer100g} kcal
+                    </strong>{' '}
                     · P: {food.proteinPer100g}g · K: {food.carbsPer100g}g · Y: {food.fatPer100g}g
                     {food.servingGrams
                       ? ` · ${food.servingLabel ?? '1 porsiyon'} (${food.servingGrams} g)`
@@ -461,7 +452,7 @@ export function FoodsTab({
                     <button
                       type="button"
                       onClick={() => startEdit(food)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+                      className="ft-btn-secondary py-1.5"
                     >
                       Düzenle
                     </button>
@@ -469,7 +460,7 @@ export function FoodsTab({
                       type="button"
                       disabled={deletingId === food.id}
                       onClick={() => void handleDelete(food.id)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                      className="ft-btn-danger py-1.5"
                     >
                       Sil
                     </button>

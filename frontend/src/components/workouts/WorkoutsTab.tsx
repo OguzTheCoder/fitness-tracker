@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Dumbbell, History, Pencil, Plus, Trash2 } from 'lucide-react';
 import { DateRangeFilter } from '../DateRangeFilter';
 import { FormField } from '../FormField';
+import { SlideOver } from '../ui/SlideOver';
 import { ApiError } from '../../services/api';
 import {
   workoutService,
@@ -39,7 +41,9 @@ interface WorkoutsTabProps {
   muscleGroups: string[];
   templates: WorkoutTemplate[];
   pendingTemplate: WorkoutTemplate | null;
+  initialOpenNew?: boolean;
   onConsumePendingTemplate: () => void;
+  onConsumeInitialOpenNew?: () => void;
 }
 
 let uidCounter = 0;
@@ -113,7 +117,9 @@ export function WorkoutsTab({
   muscleGroups,
   templates,
   pendingTemplate,
+  initialOpenNew = false,
   onConsumePendingTemplate,
+  onConsumeInitialOpenNew,
 }: WorkoutsTabProps) {
   const [entries, setEntries] = useState<WorkoutEntry[]>([]);
   const [summary, setSummary] = useState<WorkoutSummary>({
@@ -124,6 +130,7 @@ export function WorkoutsTab({
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [date, setDate] = useState(getTodayIsoDate);
@@ -213,6 +220,7 @@ export function WorkoutsTab({
       setFieldErrors({});
       setFormError(null);
       setFeedback(`"${tpl.name}" şablonu yüklendi.`);
+      setDrawerOpen(true);
       void fetchPreviousForDraft(items, date, null);
     },
     [date, durationMinutes, fetchPreviousForDraft],
@@ -224,6 +232,14 @@ export function WorkoutsTab({
       onConsumePendingTemplate();
     }
   }, [applyTemplate, onConsumePendingTemplate, pendingTemplate]);
+
+  useEffect(() => {
+    if (initialOpenNew) {
+      setEditingId(null);
+      setDrawerOpen(true);
+      onConsumeInitialOpenNew?.();
+    }
+  }, [initialOpenNew, onConsumeInitialOpenNew]);
 
   function getPreviousForExercise(ex: DraftExercise): PreviousExercisePerformance | undefined {
     if (ex.exerciseId && prevById[ex.exerciseId]) {
@@ -366,9 +382,20 @@ export function WorkoutsTab({
     setFieldErrors({});
     setFormError(null);
     setFeedback(null);
+    setDrawerOpen(true);
     if (mapped.length > 0) {
       void fetchPreviousForDraft(mapped, entry.date, entry.id);
     }
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    resetForm();
+  }
+
+  function openNewDrawer() {
+    resetForm();
+    setDrawerOpen(true);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -411,7 +438,7 @@ export function WorkoutsTab({
         setFeedback('Antrenman kaydı eklendi.');
       }
 
-      resetForm();
+      closeDrawer();
       await loadEntries(range);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -455,28 +482,25 @@ export function WorkoutsTab({
 
   return (
     <div className="space-y-6">
-      {summary.totalCount > 0 && (
-        <div className="flex flex-wrap gap-3 text-xs">
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-            <span className="text-slate-400">Toplam Antrenman: </span>
-            <span className="font-semibold text-emerald-400">{summary.totalCount}</span>
+      {/* Üst Özet & Hızlı Başlatma */}
+      <section className="ft-card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <div className="ft-card-subtle px-3.5 py-2">
+            <span className="text-ink-muted">Toplam Antrenman: </span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+              {summary.totalCount}
+            </span>
           </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-            <span className="text-slate-400">Toplam Süre: </span>
-            <span className="font-semibold text-slate-200">{summary.totalDurationMinutes} dk</span>
+          <div className="ft-card-subtle px-3.5 py-2">
+            <span className="text-ink-muted">Toplam Süre: </span>
+            <span className="font-bold text-ink">{summary.totalDurationMinutes} dk</span>
           </div>
         </div>
-      )}
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-white">
-            {editingId ? 'Antrenman Kaydını Düzenle' : 'Yeni Antrenman Kaydı'}
-          </h2>
-
-          {templates.length > 0 && !editingId && (
+        <div className="flex flex-wrap items-center gap-2">
+          {templates.length > 0 && (
             <div className="flex items-center gap-2">
-              <label htmlFor="workout-template-select" className="text-xs text-slate-400">
+              <label htmlFor="workout-template-select" className="text-xs font-medium text-ink-muted">
                 Şablondan yükle:
               </label>
               <select
@@ -486,7 +510,7 @@ export function WorkoutsTab({
                   const found = templates.find((t) => t.id === e.target.value);
                   if (found) applyTemplate(found);
                 }}
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none"
+                className="ft-input-sm"
               >
                 <option value="">Şablon seçin...</option>
                 {templates.map((tpl) => (
@@ -497,27 +521,127 @@ export function WorkoutsTab({
               </select>
             </div>
           )}
+
+          <button type="button" onClick={openNewDrawer} className="ft-btn-primary py-2 text-xs">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            <span>Yeni Antrenman</span>
+          </button>
+        </div>
+      </section>
+
+      {feedback && !drawerOpen && (
+        <div role="status" className="ft-alert-success">
+          {feedback}
+        </div>
+      )}
+
+      <DateRangeFilter value={range} onApply={setRange} />
+
+      <section className="ft-card p-5 sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+            <Dumbbell className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <span>Antrenman Geçmişi</span>
+          </h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {entries.length} kayıt
+          </span>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-5">
+        {listError && (
+          <div role="alert" className="ft-alert-error">
+            {listError}
+          </div>
+        )}
+
+        {isLoading ? (
+          <p className="py-8 text-center text-sm text-ink-muted">
+            Antrenman kayıtları yükleniyor...
+          </p>
+        ) : entries.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-line-strong bg-subtle px-4 py-8 text-center">
+            <p className="text-sm text-ink-muted">
+              {range.from || range.to
+                ? 'Seçilen tarih aralığında antrenman kaydı bulunamadı.'
+                : 'Henüz antrenman kaydı eklenmemiş. Yeni Antrenman butonundan ilk seansını ekleyebilirsin.'}
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-line">
+            {entries.map((entry) => (
+              <li
+                key={entry.id}
+                className="flex flex-wrap items-start justify-between gap-3 py-4 first:pt-0 last:pb-0"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="text-base font-semibold text-ink">{entry.name}</span>
+                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                      {entry.durationMinutes} dk
+                    </span>
+                    <span className="text-xs font-medium text-ink-secondary">
+                      {formatTurkishDate(entry.date)}
+                    </span>
+                    <span className="text-xs text-ink-muted">{entry.date}</span>
+                  </div>
+                  {entry.note && <p className="text-xs text-ink-muted">{entry.note}</p>}
+                  {entry.exercises && entry.exercises.length > 0 && (
+                    <ul className="space-y-1 pt-1 text-xs text-ink-secondary">
+                      {entry.exercises.map((ex, idx) => (
+                        <li key={ex.id ?? idx} className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-ink">{ex.exerciseName}:</span>
+                          <span className="text-ink-muted">{formatSetsCompact(ex.sets)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(entry)}
+                    className="ft-btn-secondary py-1.5"
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Düzenle</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deletingId === entry.id}
+                    onClick={() => handleDelete(entry.id)}
+                    className="ft-btn-danger py-1.5"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{deletingId === entry.id ? 'Siliniyor...' : 'Sil'}</span>
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <SlideOver
+        open={drawerOpen}
+        onClose={closeDrawer}
+        title={editingId ? 'Antrenman Kaydını Düzenle' : 'Yeni Antrenman Kaydı'}
+        subtitle="Şablon, katalog veya serbest hareketlerle set × tekrar × ağırlık ekle."
+        maxWidthClass="md:max-w-2xl"
+      >
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               id="workout-date"
               label="Tarih"
@@ -560,16 +684,17 @@ export function WorkoutsTab({
             />
           </div>
 
-          <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="ft-card-subtle space-y-3 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-semibold text-white">Hareketler & Setler (Opsiyonel)</h3>
-                <p className="text-xs text-slate-400">
-                  Katalogdan seç veya serbest hareket ekle; vücut ağırlığında ağırlık alanını boş bırakabilirsin.
+                <h3 className="text-sm font-semibold text-ink">Hareketler & Setler (Opsiyonel)</h3>
+                <p className="text-xs text-ink-muted">
+                  Katalogdan seç veya serbest hareket ekle; vücut ağırlığında ağırlık alanını boş
+                  bırakabilirsin.
                 </p>
               </div>
               {fieldErrors.exercises && (
-                <p role="alert" className="text-xs text-rose-400">
+                <p role="alert" className="text-xs font-medium text-rose-600 dark:text-rose-400">
                   {fieldErrors.exercises}
                 </p>
               )}
@@ -583,7 +708,7 @@ export function WorkoutsTab({
                   setMuscleFilter(e.target.value);
                   setSelectedExerciseId('');
                 }}
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none sm:col-span-3"
+                className="ft-input-sm sm:col-span-4"
               >
                 <option value="">Tüm Kas Bölgeleri</option>
                 {muscleGroups.map((mg) => (
@@ -597,7 +722,7 @@ export function WorkoutsTab({
                 aria-label="Katalogdan egzersiz seç"
                 value={selectedExerciseId}
                 onChange={(e) => setSelectedExerciseId(e.target.value)}
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none sm:col-span-6"
+                className="ft-input-sm sm:col-span-5"
               >
                 <option value="">Katalogdan hareket seçin...</option>
                 {filteredCatalog.map((ex) => (
@@ -611,7 +736,7 @@ export function WorkoutsTab({
                 type="button"
                 disabled={!selectedExerciseId}
                 onClick={handleAddCatalogExercise}
-                className="rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40 sm:col-span-3"
+                className="ft-btn-secondary border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 sm:col-span-3"
               >
                 + Hareket Ekle
               </button>
@@ -625,13 +750,13 @@ export function WorkoutsTab({
                 placeholder="Veya serbest hareket adı yaz (örn. Band Pull-Apart)"
                 value={freeExerciseName}
                 onChange={(e) => setFreeExerciseName(e.target.value)}
-                className="min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                className="ft-input-sm min-w-[200px] flex-1"
               />
               <button
                 type="button"
                 disabled={!freeExerciseName.trim()}
                 onClick={handleAddFreeExercise}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                className="ft-btn-secondary"
               >
                 Serbest Ekle
               </button>
@@ -644,14 +769,14 @@ export function WorkoutsTab({
                   return (
                     <div
                       key={ex.key}
-                      className="rounded-xl border border-slate-800 bg-slate-900/70 p-3.5"
+                      className="rounded-xl border border-line bg-surface p-3.5"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-slate-500">#{exIdx + 1}</span>
-                          <span className="text-sm font-semibold text-white">{ex.exerciseName}</span>
+                          <span className="text-xs font-semibold text-ink-muted">#{exIdx + 1}</span>
+                          <span className="text-sm font-semibold text-ink">{ex.exerciseName}</span>
                           {ex.muscleGroup && (
-                            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+                            <span className="rounded-full bg-elevated px-2 py-0.5 text-[11px] text-ink-secondary">
                               {ex.muscleGroup}
                             </span>
                           )}
@@ -659,22 +784,25 @@ export function WorkoutsTab({
                         <button
                           type="button"
                           onClick={() => removeExerciseRow(ex.key)}
-                          className="text-xs text-slate-400 hover:text-rose-400"
+                          className="text-xs text-ink-muted transition hover:text-rose-500"
                         >
                           Hareketi Kaldır
                         </button>
                       </div>
 
                       {previous && (
-                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-200">
-                          <span>
-                            Önceki ({formatTurkishDate(previous.date)}):{' '}
-                            <strong>{formatSetsCompact(previous.sets)}</strong>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-800 dark:text-sky-200">
+                          <span className="inline-flex items-center gap-1.5">
+                            <History className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <span>
+                              Önceki ({formatTurkishDate(previous.date)}):{' '}
+                              <strong>{formatSetsCompact(previous.sets)}</strong>
+                            </span>
                           </span>
                           <button
                             type="button"
                             onClick={() => applyPreviousSets(ex.key, previous)}
-                            className="rounded bg-sky-500/20 px-2 py-0.5 font-semibold text-sky-200 transition hover:bg-sky-500/35"
+                            className="rounded-lg bg-sky-500/20 px-2.5 py-1 font-semibold text-sky-900 transition hover:bg-sky-500/30 dark:text-sky-100"
                           >
                             Önceki setleri doldur
                           </button>
@@ -684,7 +812,9 @@ export function WorkoutsTab({
                       <div className="mt-2.5 space-y-2">
                         {ex.sets.map((s, setIdx) => (
                           <div key={s.key} className="flex flex-wrap items-center gap-2">
-                            <span className="w-12 text-xs text-slate-400">Set {setIdx + 1}</span>
+                            <span className="w-12 text-xs font-medium text-ink-muted">
+                              Set {setIdx + 1}
+                            </span>
                             <input
                               type="number"
                               min="1"
@@ -694,9 +824,9 @@ export function WorkoutsTab({
                               placeholder="Tekrar"
                               value={s.reps}
                               onChange={(e) => updateSetField(ex.key, s.key, 'reps', e.target.value)}
-                              className="w-24 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                              className="ft-input-sm w-24 py-1.5"
                             />
-                            <span className="text-xs text-slate-500">tekrar</span>
+                            <span className="text-xs text-ink-muted">tekrar</span>
                             <input
                               type="number"
                               min="0"
@@ -708,14 +838,14 @@ export function WorkoutsTab({
                               onChange={(e) =>
                                 updateSetField(ex.key, s.key, 'weightKg', e.target.value)
                               }
-                              className="w-28 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                              className="ft-input-sm w-28 py-1.5"
                             />
-                            <span className="text-xs text-slate-500">kg</span>
+                            <span className="text-xs text-ink-muted">kg</span>
                             {ex.sets.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeSetRow(ex.key, s.key)}
-                                className="rounded px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-rose-300"
+                                className="rounded-lg px-2 py-1 text-xs text-ink-muted transition hover:bg-elevated hover:text-rose-500"
                                 aria-label="Seti sil"
                               >
                                 ×
@@ -728,7 +858,7 @@ export function WorkoutsTab({
                       <button
                         type="button"
                         onClick={() => addSetRow(ex.key)}
-                        className="mt-2.5 text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                        className="mt-2.5 text-xs font-semibold text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400"
                       >
                         + Set Ekle
                       </button>
@@ -739,105 +869,16 @@ export function WorkoutsTab({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button type="button" onClick={closeDrawer} className="ft-btn-ghost text-sm">
+              İptal
+            </button>
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
               {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kaydet'}
             </button>
-            {(editingId || draftExercises.length > 0) && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
-              >
-                {editingId ? 'İptal' : 'Temizle'}
-              </button>
-            )}
           </div>
         </form>
-      </section>
-
-      <DateRangeFilter value={range} onApply={setRange} />
-
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Antrenman Geçmişi</h2>
-          <span className="text-xs text-slate-400">{entries.length} kayıt</span>
-        </div>
-
-        {listError && (
-          <div
-            role="alert"
-            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-          >
-            {listError}
-          </div>
-        )}
-
-        {isLoading ? (
-          <p className="py-8 text-center text-sm text-slate-400">
-            Antrenman kayıtları yükleniyor...
-          </p>
-        ) : entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
-            {range.from || range.to
-              ? 'Seçilen tarih aralığında antrenman kaydı bulunamadı.'
-              : 'Henüz antrenman kaydı eklenmemiş. Yukarıdaki formdan ilk antrenmanını girebilirsin.'}
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-800">
-            {entries.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-start justify-between gap-3 py-4 first:pt-0 last:pb-0"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-base font-semibold text-white">{entry.name}</span>
-                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                      {entry.durationMinutes} dk
-                    </span>
-                    <span className="text-sm text-slate-300">{formatTurkishDate(entry.date)}</span>
-                    <span className="text-xs text-slate-500">{entry.date}</span>
-                  </div>
-                  {entry.note && <p className="text-sm text-slate-400">{entry.note}</p>}
-                  {entry.exercises && entry.exercises.length > 0 && (
-                    <ul className="space-y-1 pt-1 text-xs text-slate-300">
-                      {entry.exercises.map((ex, idx) => (
-                        <li key={ex.id ?? idx} className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-slate-100">{ex.exerciseName}:</span>
-                          <span className="text-slate-400">{formatSetsCompact(ex.sets)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(entry)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
-                  >
-                    Düzenle
-                  </button>
-                  <button
-                    type="button"
-                    disabled={deletingId === entry.id}
-                    onClick={() => handleDelete(entry.id)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
-                  >
-                    {deletingId === entry.id ? 'Siliniyor...' : 'Sil'}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      </SlideOver>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { DatabaseBackup, Download, FileSpreadsheet, Upload } from 'lucide-react';
 import { ApiError } from '../services/api';
 import {
   backupService,
@@ -183,44 +184,42 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
   }
 
   return (
-    <section
-      aria-labelledby="backup-section-title"
-      className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
-    >
+    <section aria-labelledby="backup-section-title" className="ft-card space-y-5 p-5 sm:p-6">
       <div>
-        <h2 id="backup-section-title" className="text-lg font-semibold text-white">
-          Yedekleme & Veri Dışa Aktarma
+        <h2
+          id="backup-section-title"
+          className="flex items-center gap-2 text-base font-semibold text-ink"
+        >
+          <DatabaseBackup className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+          <span>Yedekleme & Veri Dışa Aktarma</span>
         </h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-ink-muted">
           Tüm kişisel verilerini tek JSON dosyasıyla yedekle, tablo inceleme için CSV indir veya
           daha önce aldığın yedeği güvenle geri yükle.
         </p>
       </div>
 
       {error && (
-        <div
-          role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-        >
+        <div role="alert" className="ft-alert-error">
           {error}
         </div>
       )}
 
       {statusMessage && (
-        <div
-          role="status"
-          className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-        >
+        <div role="status" className="ft-alert-success">
           {statusMessage}
         </div>
       )}
 
       {/* Export Controls */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="flex flex-col justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="ft-card-subtle flex flex-col justify-between gap-3 p-4">
           <div>
-            <h3 className="text-sm font-semibold text-white">Tam JSON Yedek</h3>
-            <p className="mt-1 text-xs text-slate-400">
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              <Download className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+              <span>Tam JSON Yedek</span>
+            </h3>
+            <p className="mt-1 text-xs text-ink-muted">
               Profil hedefleri, kilo, özel besinler, tarifler, beslenme, antrenmanlar, şablonlar,
               kardiyo ve adım kayıtlarını tek dosyada indirir.
             </p>
@@ -229,16 +228,19 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
             type="button"
             onClick={() => void handleExportJson()}
             disabled={isExportingJson}
-            className="w-full rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:self-start"
+            className="ft-btn-primary w-full py-2 text-xs sm:w-auto sm:self-start"
           >
             {isExportingJson ? 'Hazırlanıyor...' : 'Tam JSON Yedek İndir'}
           </button>
         </div>
 
-        <div className="flex flex-col justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="ft-card-subtle flex flex-col justify-between gap-3 p-4">
           <div>
-            <h3 className="text-sm font-semibold text-white">Tablo Olarak İndir (CSV)</h3>
-            <p className="mt-1 text-xs text-slate-400">
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              <FileSpreadsheet className="h-4 w-4 text-sky-500" aria-hidden="true" />
+              <span>Tablo Olarak İndir (CSV)</span>
+            </h3>
+            <p className="mt-1 text-xs text-ink-muted">
               Excel ve elektronik tablolarla uyumlu (Türkçe karakter destekli) ham kayıt tablosu.
             </p>
           </div>
@@ -250,7 +252,7 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
               id="csv-dataset-select"
               value={csvDataset}
               onChange={(e) => setCsvDataset(e.target.value as CsvDataset)}
-              className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none"
+              className="ft-input-sm flex-1"
             >
               {CSV_DATASET_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -262,7 +264,7 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
               type="button"
               onClick={() => void handleExportCsv()}
               disabled={isExportingCsv}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-100 transition hover:border-emerald-500/60 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="ft-btn-secondary py-2"
             >
               {isExportingCsv ? 'İndiriliyor...' : 'CSV İndir'}
             </button>
@@ -271,20 +273,20 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
       </div>
 
       {/* JSON Restore Form */}
-      <form
-        onSubmit={handleImportSubmit}
-        className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4"
-      >
+      <form onSubmit={handleImportSubmit} className="ft-card-subtle space-y-4 p-4">
         <div>
-          <h3 className="text-sm font-semibold text-white">JSON Yedekten Geri Yükle</h3>
-          <p className="mt-1 text-xs text-slate-400">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <Upload className="h-4 w-4 text-amber-500" aria-hidden="true" />
+            <span>JSON Yedekten Geri Yükle</span>
+          </h3>
+          <p className="mt-1 text-xs text-ink-muted">
             İşlem tek adımda (atomik) uygulanır; dosya hatalıysa mevcut hiçbir verin değişmez.
             Hazır besin ve egzersiz kütüphanesi korunur.
           </p>
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="backup-file-input" className="block text-xs font-medium text-slate-300">
+          <label htmlFor="backup-file-input" className="block text-xs font-semibold text-ink-secondary">
             JSON Yedek Dosyası (en fazla 5 MB)
           </label>
           <input
@@ -293,24 +295,24 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
             type="file"
             accept=".json,application/json"
             onChange={(e) => void handleFileChange(e)}
-            className="block w-full cursor-pointer rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-slate-200 hover:file:bg-slate-700"
+            className="block w-full cursor-pointer rounded-xl border border-line-strong bg-surface px-3 py-2 text-xs text-ink-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink hover:file:bg-line"
           />
           {parsedFile && (
-            <p className="text-xs text-emerald-300">
-              Hazır: <span className="font-medium">{parsedFile.fileName}</span> · Şema v
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">
+              Hazır: <span className="font-semibold">{parsedFile.fileName}</span> · Şema v
               {String(parsedFile.schemaVersion ?? '?')} · {parsedFile.totalRecords} kayıt
             </p>
           )}
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-xs font-medium text-slate-300">Geri Yükleme Modu</legend>
+          <legend className="text-xs font-semibold text-ink-secondary">Geri Yükleme Modu</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label
               className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 text-xs transition ${
                 importMode === 'merge'
-                  ? 'border-emerald-500/60 bg-emerald-500/10 text-slate-100'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700'
+                  ? 'border-emerald-500/60 bg-emerald-500/10 text-ink'
+                  : 'border-line bg-surface text-ink-secondary hover:border-line-strong'
               }`}
             >
               <input
@@ -325,8 +327,8 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
                 className="mt-0.5 accent-emerald-500"
               />
               <span>
-                <span className="block font-semibold text-white">Birleştir (Merge)</span>
-                <span className="mt-0.5 block text-slate-400">
+                <span className="block font-semibold text-ink">Birleştir (Merge)</span>
+                <span className="mt-0.5 block text-ink-muted">
                   Mevcut kayıtlarını silmeden yedekteki kayıtları hesabına ekler.
                 </span>
               </span>
@@ -335,8 +337,8 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
             <label
               className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 text-xs transition ${
                 importMode === 'overwrite'
-                  ? 'border-rose-500/60 bg-rose-500/10 text-slate-100'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700'
+                  ? 'border-rose-500/60 bg-rose-500/10 text-ink'
+                  : 'border-line bg-surface text-ink-secondary hover:border-line-strong'
               }`}
             >
               <input
@@ -348,8 +350,8 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
                 className="mt-0.5 accent-rose-500"
               />
               <span>
-                <span className="block font-semibold text-white">Üzerine Yaz (Overwrite)</span>
-                <span className="mt-0.5 block text-slate-400">
+                <span className="block font-semibold text-ink">Üzerine Yaz (Overwrite)</span>
+                <span className="mt-0.5 block text-ink-muted">
                   Mevcut tüm kişisel kayıtlarını siler ve yalnızca bu yedeği yükler.
                 </span>
               </span>
@@ -358,12 +360,12 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
         </fieldset>
 
         {importMode === 'merge' && (
-          <fieldset className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-            <legend className="px-1 text-xs font-medium text-slate-300">
+          <fieldset className="space-y-2 rounded-xl border border-line bg-surface p-3">
+            <legend className="px-1 text-xs font-semibold text-ink-secondary">
               Aynı Kayıt Çakışırsa Ne Yapılsın?
             </legend>
             <div className="space-y-2">
-              <label className="flex cursor-pointer items-start gap-2.5 text-xs text-slate-200">
+              <label className="flex cursor-pointer items-start gap-2.5 text-xs text-ink-secondary">
                 <input
                   type="radio"
                   name="backupConflictStrategy"
@@ -373,14 +375,14 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
                   className="mt-0.5 accent-emerald-500"
                 />
                 <span>
-                  <span className="font-semibold text-white">Mevcut kayıtları koru</span>
-                  <span className="block text-slate-400">
+                  <span className="font-semibold text-ink">Mevcut kayıtları koru</span>
+                  <span className="block text-ink-muted">
                     Aynı güne ait kilo/adım kaydın, aynı barkodlu özel besinin ve profil hedeflerin
                     değişmez; yalnızca hesapta eksik olan kayıtlar eklenir.
                   </span>
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-2.5 text-xs text-slate-200">
+              <label className="flex cursor-pointer items-start gap-2.5 text-xs text-ink-secondary">
                 <input
                   type="radio"
                   name="backupConflictStrategy"
@@ -390,8 +392,8 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
                   className="mt-0.5 accent-emerald-500"
                 />
                 <span>
-                  <span className="font-semibold text-white">Yedekteki kayıtları önceliklendir</span>
-                  <span className="block text-slate-400">
+                  <span className="font-semibold text-ink">Yedekteki kayıtları önceliklendir</span>
+                  <span className="block text-ink-muted">
                     Aynı güne ait kilo/adım kaydın, aynı barkodlu özel besinin ve profil hedeflerin
                     yedekteki değerlerle güncellenir; diğer günlerdeki mevcut verilerin korunur.
                   </span>
@@ -402,7 +404,7 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
         )}
 
         {importMode === 'overwrite' && (
-          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-200">
+          <label className="ft-alert-error flex cursor-pointer items-start gap-2.5 text-xs">
             <input
               type="checkbox"
               checked={confirmOverwrite}
@@ -420,7 +422,7 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
           <button
             type="submit"
             disabled={isImporting || !parsedFile || (importMode === 'overwrite' && !confirmOverwrite)}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`rounded-xl px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
               importMode === 'overwrite'
                 ? 'bg-rose-500 text-white hover:bg-rose-400'
                 : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
@@ -435,20 +437,20 @@ export function BackupSection({ onProfileRestored }: BackupSectionProps) {
         </div>
 
         {importResult && (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-300">
-            <p className="font-semibold text-white">Geri Yükleme Özeti</p>
-            <div className="mt-2 flex flex-wrap gap-3">
-              <span className="rounded-md bg-emerald-500/15 px-2.5 py-1 text-emerald-300">
+          <div className="rounded-xl border border-line bg-surface p-3 text-xs text-ink-secondary">
+            <p className="font-semibold text-ink">Geri Yükleme Özeti</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span className="rounded-md bg-emerald-500/15 px-2.5 py-1 font-medium text-emerald-700 dark:text-emerald-300">
                 Eklenen: {importResult.totals.imported}
               </span>
-              <span className="rounded-md bg-sky-500/15 px-2.5 py-1 text-sky-300">
+              <span className="rounded-md bg-sky-500/15 px-2.5 py-1 font-medium text-sky-700 dark:text-sky-300">
                 Güncellenen: {importResult.totals.updated}
               </span>
-              <span className="rounded-md bg-slate-700/60 px-2.5 py-1 text-slate-300">
+              <span className="rounded-md bg-elevated px-2.5 py-1 font-medium text-ink-secondary">
                 Korunan / Atlanan: {importResult.totals.skipped}
               </span>
               {importResult.profileUpdated && (
-                <span className="rounded-md bg-amber-500/15 px-2.5 py-1 text-amber-300">
+                <span className="rounded-md bg-amber-500/15 px-2.5 py-1 font-medium text-amber-800 dark:text-amber-300">
                   Profil hedefleri güncellendi
                 </span>
               )}

@@ -13,7 +13,7 @@
 - **Kapsam Dışı:** Hedef kilo, bel/yağ oranı gibi ek vücut ölçümleri, ücretli besin API'leri, giyilebilir cihaz entegrasyonu, sosyal özellikler, admin/çoklu rol, çoklu dil, native mobil mağaza derlemesi.
 
 ## 2. Mimari ve Klasör Şablonu
-- **Frontend (`frontend/`):** React + Vite + TypeScript + Tailwind CSS (Türkçe PWA, IndexedDB offline depo + senkron kuyruğu; yeni tasarım en sona bırakılır)
+- **Frontend (`frontend/`):** React + Vite + TypeScript + Tailwind CSS + `lucide-react` (Türkçe PWA, çift tema [Koyu/Açık], PC Sidebar + Mobil Alt Menü, Bento + SVG `ProgressRing` / etkileşimli `TrendChart`, `SlideOver` çekmeceler, IndexedDB offline depo + senkron kuyruğu)
 - **Backend (`backend/`):** Node.js + Express + TypeScript + Zod + JWT + `bcryptjs` + güvenlik katmanı (`helmet`, rate limit, `cookie-parser` `HttpOnly` çerez)
 - **Veritabanı:** Prisma ORM (v1'de SQLite; v2'de 0 TL bulut PostgreSQL + yerelde/testte uyumlu yapı)
 - **Testler:** Vitest + Supertest ve Vitest + React Testing Library
@@ -50,7 +50,7 @@ Fitness Tracker/
 - [x] **`v1.3.0` (`AUTH-12`) Esnek Antrenman, Şablonlar, Kardiyo & Adım:** Kas bölgeli 46 hazır egzersiz seed'i + özel egzersiz CRUD (`/api/exercises`), program şablonları (`/api/workout-templates`), v2 set × tekrar × ağırlık + önceki antrenman hatırlatması (`/api/workouts`, `/api/workouts/previous`), beslenmeden bağımsız kardiyo (`/api/cardio`), profil hedefli günlük adım upsert (`/api/steps`), güncel `/api/stats/summary` ve 4 sekmeli `/workouts` + `/dashboard` UI.
 - [x] **`v1.4.0` (`AUTH-13`) Yedekleme & İçe Aktarma:** Sürümlü (`schemaVersion: 1`) tek dosya JSON tam yedek (`GET /api/backup/export?format=json`), UTF-8 BOM + formül enjeksiyon korumalı 6 veri setli CSV dışa aktarma (`weights`, `nutrition`, `workouts`, `cardio`, `steps`, `calories`), atomik Prisma transaction + Zod doğrulamalı `POST /api/backup/import` (`merge` [`keep_existing` / `prefer_backup`] ve `overwrite`, 5 MB özel gövde sınırı + hız sınırlayıcı) ve `/profile` yedekleme arayüzü.
 - [x] **`v1.5.0` (`AUTH-14`) Offline-First Senkron & 0 TL Model B Altyapısı:** Tek kaynaklı Prisma şemasından PostgreSQL şema üretimi/doğrulaması (`prisma:pg:*`), sağlayıcıdan bağımsız evrensel kurulum (`TRUST_PROXY`, çoklu `CORS_ORIGIN`, `SERVE_FRONTEND`, `/api/ready`, `.env.example`), `deletedAt` soft-delete + atomik delta/Last-Write-Wins `/api/sync` (`1mb` limit + hız sınırlayıcı + kullanıcı/çekirdek izolasyonu), istemci IndexedDB + offline kuyruk + üst çubuk eşitleme göstergesi ve `/api/*` önbelleklemeyen güvenli PWA altyapısı.
-- [ ] **`v2.0.0` (`AUTH-15`+) Yeni Nesil Frontend Tasarımı & Canlı Yayın:** Tasarım çalışması sonrası PC + mobil PWA arayüzünün (barkod/QR tarayıcı dahil) yenilenmesi, uçtan uca testler ve `v2.0.0` canlı yayını.
+- [x] **`v2.0.0` (`AUTH-15`) Yeni Nesil Frontend Tasarımı:** Çift tema (`ThemeContext`), PC sol kenar menüsü (`Sidebar`) + mobil PWA alt menü (`Bottom Bar`), Bento özet paneli + SVG `ProgressRing` + etkileşimli/hedef çizgili `TrendChart`, açılır `SlideOver` çekmeceler + canlı aramalı besin seçici (`Combobox`), minimalist standart formlar, `lucide-react` ikonları ve `2.0.0` sürüm/PWA güncellemesi. *(Sıradaki adım: 0 TL Model B canlı yayını.)*
 
 ## 5. Çalıştırma
 - **Backend kurulum & migration (yerel SQLite):** `npm install --prefix backend` · `npm --prefix backend run prisma:migrate` · `npm --prefix backend run prisma:generate` · `npm --prefix backend run prisma:seed`

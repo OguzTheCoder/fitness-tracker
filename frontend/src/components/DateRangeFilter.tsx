@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { CalendarRange, Filter, RotateCcw } from 'lucide-react';
 import type { DateRange } from '../utils/date';
 
 interface DateRangeFilterProps {
@@ -31,13 +32,14 @@ export function DateRangeFilter({ value, onApply }: DateRangeFilterProps) {
   const hasFilter = Boolean(value.from || value.to || from || to);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
-    >
+    <form onSubmit={handleSubmit} className="ft-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-ink-secondary">
+        <CalendarRange className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+        <span>Tarih Aralığı</span>
+      </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-[150px] flex-1 space-y-1">
-          <label htmlFor="filter-from" className="block text-xs font-medium text-slate-400">
+        <div className="min-w-[145px] flex-1 space-y-1">
+          <label htmlFor="filter-from" className="block text-xs font-medium text-ink-muted">
             Başlangıç Tarihi
           </label>
           <input
@@ -45,12 +47,12 @@ export function DateRangeFilter({ value, onApply }: DateRangeFilterProps) {
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30"
+            className="ft-input py-2"
           />
         </div>
 
-        <div className="min-w-[150px] flex-1 space-y-1">
-          <label htmlFor="filter-to" className="block text-xs font-medium text-slate-400">
+        <div className="min-w-[145px] flex-1 space-y-1">
+          <label htmlFor="filter-to" className="block text-xs font-medium text-ink-muted">
             Bitiş Tarihi
           </label>
           <input
@@ -58,31 +60,26 @@ export function DateRangeFilter({ value, onApply }: DateRangeFilterProps) {
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30"
+            className="ft-input py-2"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
-          >
-            Filtrele
+          <button type="submit" className="ft-btn-secondary py-2.5 text-sm">
+            <Filter className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Filtrele</span>
           </button>
           {hasFilter && (
-            <button
-              type="button"
-              onClick={handleReset}
-              className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
-            >
-              Temizle
+            <button type="button" onClick={handleReset} className="ft-btn-ghost py-2.5 text-sm">
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Temizle</span>
             </button>
           )}
         </div>
       </div>
 
       {error && (
-        <p role="alert" className="mt-2 text-xs text-rose-400">
+        <p role="alert" className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}

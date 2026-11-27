@@ -173,25 +173,19 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h2 className="text-base font-semibold text-white">
+      <section className="ft-card p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-ink">
           {editingId ? 'Tarifi Düzenle' : 'Yeni Tarif Oluştur'}
         </h2>
 
         <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
+            <div role="alert" className="ft-alert-error">
               {formError}
             </div>
           )}
           {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
+            <div role="status" className="ft-alert-success">
               {feedback}
             </div>
           )}
@@ -237,13 +231,13 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
 
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                 Malzemeler
               </span>
               <button
                 type="button"
                 onClick={addRow}
-                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-500/20 dark:text-emerald-300"
               >
                 + Malzeme Ekle
               </button>
@@ -255,7 +249,7 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
                   aria-label={`Malzeme ${index + 1}`}
                   value={row.foodId || defaultFoodId}
                   onChange={(e) => updateRow(index, { foodId: e.target.value })}
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
+                  className="ft-input py-2"
                 >
                   {foods.map((food) => (
                     <option key={food.id} value={food.id}>
@@ -271,13 +265,13 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
                   placeholder="Gram"
                   value={row.grams}
                   onChange={(e) => updateRow(index, { grams: e.target.value })}
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400"
+                  className="ft-input py-2"
                 />
                 <button
                   type="button"
                   disabled={rows.length <= 1}
                   onClick={() => removeRow(index)}
-                  className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-40"
+                  className="ft-btn-danger py-2"
                 >
                   Kaldır
                 </button>
@@ -285,27 +279,25 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2.5 text-xs text-slate-300">
+          <div className="ft-card-subtle flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-ink-secondary">
             <span>
               Toplam ({liveTotals.rawWeightG} g):{' '}
-              <strong className="text-emerald-400">{liveTotals.calories} kcal</strong> · P:{' '}
-              {liveTotals.proteinG}g · K: {liveTotals.carbsG}g · Y: {liveTotals.fatG}g · Porsiyon
-              başı: <strong>{liveTotals.perServingCalories} kcal</strong>
+              <strong className="text-emerald-600 dark:text-emerald-400">
+                {liveTotals.calories} kcal
+              </strong>{' '}
+              · P: {liveTotals.proteinG}g · K: {liveTotals.carbsG}g · Y: {liveTotals.fatG}g ·
+              Porsiyon başı: <strong className="text-ink">{liveTotals.perServingCalories} kcal</strong>
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="submit"
                 disabled={isSaving || foods.length === 0}
-                className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+                className="ft-btn-primary py-2 text-xs"
               >
                 {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Tarifi Kaydet'}
               </button>
               {editingId && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:text-white"
-                >
+                <button type="button" onClick={resetForm} className="ft-btn-ghost py-2">
                   İptal
                 </button>
               )}
@@ -314,32 +306,31 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
         </form>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Kayıtlı Tariflerim</h2>
-          <span className="text-xs text-slate-400">{recipes.length} tarif</span>
+          <h2 className="text-base font-semibold text-ink">Kayıtlı Tariflerim</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {recipes.length} tarif
+          </span>
         </div>
 
         {recipes.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-6 text-center text-sm text-ink-muted">
             Henüz tarif oluşturmadın. Yukarıdan birden çok malzemeyle ilk tarifini ekleyebilirsin.
           </p>
         ) : (
           <div className="space-y-4">
             {recipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="rounded-xl border border-slate-800 bg-slate-950/60 p-4"
-              >
+              <div key={recipe.id} className="ft-card-subtle p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-white">{recipe.name}</h3>
+                    <h3 className="text-sm font-semibold text-ink">{recipe.name}</h3>
                     {recipe.description && (
-                      <p className="mt-0.5 text-xs text-slate-400">{recipe.description}</p>
+                      <p className="mt-0.5 text-xs text-ink-muted">{recipe.description}</p>
                     )}
-                    <p className="mt-1 text-xs text-slate-300">
+                    <p className="mt-1 text-xs text-ink-secondary">
                       1 Porsiyon:{' '}
-                      <strong className="text-emerald-400">
+                      <strong className="text-emerald-600 dark:text-emerald-400">
                         {recipe.perServing.calories} kcal
                       </strong>{' '}
                       (P: {recipe.perServing.proteinG}g · K: {recipe.perServing.carbsG}g · Y:{' '}
@@ -352,7 +343,7 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
                     <button
                       type="button"
                       onClick={() => startEdit(recipe)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+                      className="ft-btn-secondary py-1.5"
                     >
                       Düzenle
                     </button>
@@ -360,7 +351,7 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
                       type="button"
                       disabled={deletingId === recipe.id}
                       onClick={() => void handleDelete(recipe.id)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                      className="ft-btn-danger py-1.5"
                     >
                       Sil
                     </button>
@@ -371,7 +362,7 @@ export function RecipesTab({ foods, recipes, onChanged }: RecipesTabProps) {
                   {recipe.items.map((item) => (
                     <li
                       key={item.id}
-                      className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-[11px] text-slate-300"
+                      className="rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] text-ink-secondary"
                     >
                       {item.foodName} · {item.grams} g ({item.calories} kcal)
                     </li>

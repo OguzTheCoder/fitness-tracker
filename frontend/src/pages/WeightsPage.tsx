@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Pencil, Plus, Scale, Trash2 } from 'lucide-react';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { FormField } from '../components/FormField';
+import { TrendChart } from '../components/TrendChart';
+import { SlideOver } from '../components/ui/SlideOver';
 import { ApiError } from '../services/api';
 import { weightService, type WeightEntry } from '../services/weightService';
 import { formatTurkishDate, getTodayIsoDate, type DateRange } from '../utils/date';
@@ -29,11 +33,13 @@ function validateWeightForm(date: string, weightText: string, note: string): For
 }
 
 export function WeightsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [range, setRange] = useState<DateRange>({});
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(getTodayIsoDate);
   const [weightKg, setWeightKg] = useState('');
@@ -61,6 +67,16 @@ export function WeightsPage() {
     void loadEntries(range);
   }, [loadEntries, range]);
 
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setEditingId(null);
+      setDrawerOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   function resetForm() {
     setEditingId(null);
     setDate(getTodayIsoDate());
@@ -68,6 +84,11 @@ export function WeightsPage() {
     setNote('');
     setFieldErrors({});
     setFormError(null);
+  }
+
+  function openNewDrawer() {
+    resetForm();
+    setDrawerOpen(true);
   }
 
   function startEdit(entry: WeightEntry) {
@@ -78,6 +99,12 @@ export function WeightsPage() {
     setFieldErrors({});
     setFormError(null);
     setFeedback(null);
+    setDrawerOpen(true);
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    resetForm();
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -105,7 +132,7 @@ export function WeightsPage() {
         setFeedback(res.updated ? 'Bu tarihteki kilo kaydı güncellendi.' : 'Kilo kaydı eklendi.');
       }
 
-      resetForm();
+      closeDrawer();
       await loadEntries(range);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -131,7 +158,7 @@ export function WeightsPage() {
     setFeedback(null);
     try {
       await weightService.remove(id);
-      if (editingId === id) resetForm();
+      if (editingId === id) closeDrawer();
       setFeedback('Kilo kaydı silindi.');
       await loadEntries(range);
     } catch (err) {
@@ -145,167 +172,139 @@ export function WeightsPage() {
   const weights = entries.map((e) => e.weightKg);
   const minWeight = weights.length > 0 ? Math.min(...weights) : null;
   const maxWeight = weights.length > 0 ? Math.max(...weights) : null;
+  const chartData = useMemo(
+    () =>
+      [...entries]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((e) => ({ date: e.date, value: e.weightKg })),
+    [entries],
+  );
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-end justify-between gap-4">
+      <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Günlük Kilo Takibi</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+            Günlük Kilo Takibi
+          </h1>
+          <p className="mt-1 text-xs text-ink-muted sm:text-sm">
             Aynı tarihe yeni ölçüm girildiğinde mevcut gün kaydı otomatik güncellenir.
           </p>
         </div>
-        {latest && (
-          <div className="flex flex-wrap gap-3 text-xs">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">Son: </span>
-              <span className="font-semibold text-emerald-400">{latest.weightKg} kg</span>
-            </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <span className="text-slate-400">En Düşük / Yüksek: </span>
-              <span className="font-semibold text-slate-200">
-                {minWeight} / {maxWeight} kg
-              </span>
-            </div>
-          </div>
-        )}
+
+        <button type="button" onClick={openNewDrawer} className="ft-btn-primary">
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          <span>Yeni Kilo Kaydı</span>
+        </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-        <h2 className="text-base font-semibold text-white">
-          {editingId ? 'Kilo Kaydını Düzenle' : 'Yeni Kilo Kaydı'}
-        </h2>
+      {feedback && (
+        <div role="status" className="ft-alert-success">
+          {feedback}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
-          {formError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300"
-            >
-              {formError}
-            </div>
-          )}
-          {feedback && (
-            <div
-              role="status"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300"
-            >
-              {feedback}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <FormField
-              id="weight-date"
-              label="Tarih"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              error={fieldErrors.date}
-            />
-            <FormField
-              id="weight-kg"
-              label="Kilo (kg)"
-              type="number"
-              step="0.1"
-              min="20"
-              max="350"
-              placeholder="Örn. 78.5"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
-              error={fieldErrors.weightKg}
-            />
-            <FormField
-              id="weight-note"
-              label="Not (Opsiyonel)"
-              type="text"
-              maxLength={300}
-              placeholder="Örn. Sabah aç karnına"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              error={fieldErrors.note}
-            />
+      {latest && (
+        <section className="grid gap-3 sm:grid-cols-3">
+          <div className="ft-card p-4">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+              <Scale className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <span>Son Ölçüm</span>
+            </span>
+            <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {latest.weightKg} kg
+            </p>
+            <p className="mt-0.5 text-xs text-ink-muted">{formatTurkishDate(latest.date)}</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kaydet'}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
-              >
-                İptal
-              </button>
-            )}
+          <div className="ft-card p-4">
+            <span className="text-xs font-medium text-ink-muted">En Düşük</span>
+            <p className="mt-1.5 text-2xl font-bold text-ink">{minWeight} kg</p>
+            <p className="mt-0.5 text-xs text-ink-muted">Listelenen aralık</p>
           </div>
-        </form>
-      </section>
+
+          <div className="ft-card p-4">
+            <span className="text-xs font-medium text-ink-muted">En Yüksek</span>
+            <p className="mt-1.5 text-2xl font-bold text-ink">{maxWeight} kg</p>
+            <p className="mt-0.5 text-xs text-ink-muted">{entries.length} ölçüm</p>
+          </div>
+        </section>
+      )}
+
+      {chartData.length >= 2 && (
+        <TrendChart
+          title="Kilo Grafiği"
+          subtitle="Seçili aralıktaki kilo değişimin"
+          data={chartData}
+          unit="kg"
+          accent="emerald"
+          emptyMessage="Kilo grafiği için en az 2 ölçüm gereklidir."
+        />
+      )}
 
       <DateRangeFilter value={range} onApply={setRange} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="ft-card p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Kayıt Geçmişi</h2>
-          <span className="text-xs text-slate-400">{entries.length} kayıt</span>
+          <h2 className="text-base font-semibold text-ink">Kayıt Geçmişi</h2>
+          <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+            {entries.length} kayıt
+          </span>
         </div>
 
         {listError && (
-          <div
-            role="alert"
-            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-          >
+          <div role="alert" className="ft-alert-error">
             {listError}
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-8 text-center text-sm text-slate-400">Kilo kayıtları yükleniyor...</p>
+          <p className="py-8 text-center text-sm text-ink-muted">Kilo kayıtları yükleniyor...</p>
         ) : entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
-            {range.from || range.to
-              ? 'Seçilen tarih aralığında kilo kaydı bulunamadı.'
-              : 'Henüz kilo kaydı eklenmemiş. Yukarıdaki formdan ilk ölçümünü girebilirsin.'}
-          </p>
+          <div className="rounded-xl border border-dashed border-line-strong bg-subtle px-4 py-8 text-center">
+            <p className="text-sm text-ink-muted">
+              {range.from || range.to
+                ? 'Seçilen tarih aralığında kilo kaydı bulunamadı.'
+                : 'Henüz kilo kaydı eklenmemiş. Yeni Kilo Kaydı butonundan ilk ölçümünü girebilirsin.'}
+            </p>
+          </div>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {entries.map((entry) => (
               <li
                 key={entry.id}
                 className="flex flex-wrap items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0"
               >
                 <div className="space-y-0.5">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-emerald-400">{entry.weightKg} kg</span>
-                    <span className="text-sm font-medium text-slate-200">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      {entry.weightKg} kg
+                    </span>
+                    <span className="text-sm font-semibold text-ink">
                       {formatTurkishDate(entry.date)}
                     </span>
-                    <span className="text-xs text-slate-500">{entry.date}</span>
+                    <span className="text-xs text-ink-muted">{entry.date}</span>
                   </div>
-                  {entry.note && <p className="text-sm text-slate-400">{entry.note}</p>}
+                  {entry.note && <p className="text-xs text-ink-muted">{entry.note}</p>}
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => startEdit(entry)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-300"
+                    className="ft-btn-secondary py-1.5"
                   >
-                    Düzenle
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Düzenle</span>
                   </button>
                   <button
                     type="button"
                     disabled={deletingId === entry.id}
                     onClick={() => handleDelete(entry.id)}
-                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-50"
+                    className="ft-btn-danger py-1.5"
                   >
-                    {deletingId === entry.id ? 'Siliniyor...' : 'Sil'}
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{deletingId === entry.id ? 'Siliniyor...' : 'Sil'}</span>
                   </button>
                 </div>
               </li>
@@ -313,6 +312,61 @@ export function WeightsPage() {
           </ul>
         )}
       </section>
+
+      <SlideOver
+        open={drawerOpen}
+        onClose={closeDrawer}
+        title={editingId ? 'Kilo Kaydını Düzenle' : 'Yeni Kilo Kaydı'}
+        subtitle="Aynı tarihteki mevcut ölçüm otomatik olarak güncellenir."
+      >
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {formError && (
+            <div role="alert" className="ft-alert-error">
+              {formError}
+            </div>
+          )}
+
+          <FormField
+            id="weight-date"
+            label="Tarih"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            error={fieldErrors.date}
+          />
+          <FormField
+            id="weight-kg"
+            label="Kilo (kg)"
+            type="number"
+            step="0.1"
+            min="20"
+            max="350"
+            placeholder="Örn. 78.5"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+            error={fieldErrors.weightKg}
+          />
+          <FormField
+            id="weight-note"
+            label="Not (Opsiyonel)"
+            type="text"
+            maxLength={300}
+            placeholder="Örn. Sabah aç karnına"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            error={fieldErrors.note}
+          />
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button type="button" onClick={closeDrawer} className="ft-btn-ghost text-sm">
+              İptal
+            </button>
+            <button type="submit" disabled={isSaving} className="ft-btn-primary">
+              {isSaving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kaydet'}
+            </button>
+          </div>
+        </form>
+      </SlideOver>
     </div>
   );
 }

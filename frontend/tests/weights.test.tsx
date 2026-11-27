@@ -78,6 +78,9 @@ describe('Frontend Weights Page (AUTH-8)', () => {
     expect(await screen.findByText('Sabah ölçümü')).toBeInTheDocument();
     expect(screen.getAllByText('79.4 kg').length).toBeGreaterThanOrEqual(1);
 
+    // Open New Weight Drawer
+    await user.click(screen.getByRole('button', { name: 'Yeni Kilo Kaydı' }));
+
     // Client validation blocks invalid weight
     await user.type(screen.getByLabelText('Kilo (kg)'), '10');
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));

@@ -211,7 +211,8 @@ describe('Frontend Nutrition, Foods & Recipes (AUTH-10 / v1.1.0)', () => {
     expect(await screen.findByText('Magnezyum (Mg)')).toBeInTheDocument();
     expect(screen.getByText(/Hedef: 2000 kcal/i)).toBeInTheDocument();
 
-    // Add food with meal label preset
+    // Open Add Nutrition Drawer and add food with meal label preset
+    await user.click(screen.getByRole('button', { name: 'Besin / Tarif Ekle' }));
     await user.click(screen.getByRole('button', { name: 'Öğle' }));
     await user.click(screen.getByRole('button', { name: 'Kayda Ekle' }));
 

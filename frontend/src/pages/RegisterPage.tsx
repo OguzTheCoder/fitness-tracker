@@ -83,7 +83,10 @@ export function RegisterPage() {
       footer={
         <>
           Zaten hesabın var mı?{' '}
-          <Link to="/login" className="font-medium text-emerald-400 hover:text-emerald-300">
+          <Link
+            to="/login"
+            className="font-semibold text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300"
+          >
             Giriş Yap
           </Link>
         </>
@@ -91,10 +94,7 @@ export function RegisterPage() {
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && (
-          <div
-            role="alert"
-            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
-          >
+          <div role="alert" className="ft-alert-error">
             {serverError}
           </div>
         )}
@@ -147,11 +147,7 @@ export function RegisterPage() {
           error={fieldErrors.confirmPassword}
         />
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" disabled={isSubmitting} className="ft-btn-primary w-full">
           {isSubmitting ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
         </button>
       </form>
